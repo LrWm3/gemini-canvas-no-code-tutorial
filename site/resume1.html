@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>William Marsman | Head of Software Engineering</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React & ReactDOM (Production) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            scroll-behavior: smooth;
+        }
+        
+        .mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .mars-gradient {
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+        }
+
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        .section-transition {
+            transition: all 0.3s ease-in-out;
+        }
+
+        /* Custom scrollbar for a premium feel */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #ea580c;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900">
+    <div id="root"></div>
+
+    <script>
+        const e = React.createElement;
+
+        // Mock Blog Data
+        const BLOG_POSTS = [
+            {
+                id: 1,
+                title: "Scaling AI Teams in Aquaculture",
+                date: "March 2024",
+                excerpt: "Reflections on leading a diverse group of engineers to build reliable AI systems for land-based fish farms.",
+                tag: "Leadership"
+            },
+            {
+                id: 2,
+                title: "The Architecture of Command and Control",
+                date: "January 2024",
+                excerpt: "Applying London-style TDD and microservice criteria to large-scale NATO defense systems.",
+                tag: "Architecture"
+            },
+            {
+                id: 3,
+                title: "Minimizing Complexity: The Senior Engineer's Secret",
+                date: "Nov 2023",
+                excerpt: "Why I prefer selecting proven technologies over chasing the 'new and shiny' for production stability.",
+                tag: "Philosophy"
+            }
+        ];
+
+        const EXPERIENCE = [
+            {
+                company: "ReelData AI",
+                role: "Head of Software Engineering",
+                period: "2021 - Present",
+                location: "Halifax, NS",
+                description: "Leading a diverse team providing AI technologies for aquaculture. Focus on Agile delivery, system reliability, and mentoring.",
+                details: [
+                    "Lead Agile sprints and quarterly objective breakdowns in Jira.",
+                    "Architecting scalable systems with a focus on proven technologies.",
+                    "Active contributor in code reviews and architectural design."
+                ]
+            },
+            {
+                company: "MDA",
+                role: "Software Architect / Staff Engineer",
+                period: "2018 - 2021",
+                location: "Halifax, NS",
+                description: "Architectural lead for NATO's TRITON project. Specialized in DevOps automation and microservice criteria.",
+                details: [
+                    "Introduced London-style TDD and integration test frameworks.",
+                    "Automated manual DevOps tasks, enabling team self-sufficiency.",
+                    "Defined release processes for all project artifacts."
+                ]
+            },
+            {
+                company: "Current Studios",
+                role: "Software Engineer",
+                period: "2017 - 2018",
+                description: "Integrating VR/AR, OpenCV, and experimental hardware for unique interactive experiences.",
+                details: [
+                    "Extended ARKit floor tracking for dynamic floor plan generation.",
+                    "Developed computer vision similarity detection for facial expressions."
+                ]
+            }
+        ];
+
+        function App() {
+            const [view, setView] = React.useState('home');
+
+            const Header = () => e('nav', { className: 'fixed top-0 w-full z-50 glass-nav border-b border-slate-200' },
+                e('div', { className: 'max-w-6xl mx-auto px-6 h-16 flex items-center justify-between' },
+                    e('div', { className: 'font-bold text-xl tracking-tighter' },
+                        e('span', { className: 'text-slate-900' }, 'WILLIAM'),
+                        e('span', { className: 'text-orange-600' }, 'MARSMAN')
+                    ),
+                    e('div', { className: 'hidden md:flex space-x-8 text-sm font-semibold uppercase tracking-wider' },
+                        e('button', { onClick: () => setView('home'), className: `hover:text-orange-600 transition ${view === 'home' ? 'text-orange-600' : ''}` }, 'Home'),
+                        e('button', { onClick: () => setView('blog'), className: `hover:text-orange-600 transition ${view === 'blog' ? 'text-orange-600' : ''}` }, 'Blog'),
+                        e('a', { href: 'mailto:wl991552@dal.ca', className: 'hover:text-orange-600 transition' }, 'Contact')
+                    )
+                )
+            );
+
+            const Hero = () => e('section', { className: 'pt-32 pb-20 px-6 bg-white' },
+                e('div', { className: 'max-w-4xl mx-auto' },
+                    e('div', { className: 'inline-block px-3 py-1 rounded-full bg-orange-100 text-orange-700 text-xs font-bold uppercase mb-6 tracking-widest' }, 'Available for Consultation'),
+                    e('h1', { className: 'text-5xl md:text-7xl font-bold text-slate-900 mb-8 leading-tight tracking-tight' },
+                        'Architecting systems that ',
+                        e('span', { className: 'text-orange-600' }, 'scale'),
+                        ' and ',
+                        e('span', { className: 'text-orange-600' }, 'last.')
+                    ),
+                    e('p', { className: 'text-xl text-slate-600 leading-relaxed mb-10 max-w-2xl' },
+                        'Head of Software Engineering at ReelData AI. From airborne radar processors to AI-driven aquaculture, I specialize in reducing complexity and leading high-performing teams.'
+                    ),
+                    e('div', { className: 'flex flex-wrap gap-4' },
+                        e('button', { onClick: () => setView('blog'), className: 'px-8 py-4 mars-gradient text-white font-bold rounded-lg shadow-lg hover:shadow-orange-200 transition-all' }, 'Read the Blog'),
+                        e('div', { className: 'flex items-center space-x-4 px-4' },
+                            e('a', { href: 'https://linkedin.com/in/williammarsman', className: 'p-2 text-slate-400 hover:text-blue-600' }, e('i', { 'data-lucide': 'linkedin' })),
+                            e('a', { href: 'https://github.com/William-The-Marsman', className: 'p-2 text-slate-400 hover:text-black' }, e('i', { 'data-lucide': 'github' }))
+                        )
+                    )
+                )
+            );
+
+            const ExperienceSection = () => e('section', { className: 'py-20 px-6 bg-slate-50' },
+                e('div', { className: 'max-w-4xl mx-auto' },
+                    e('h2', { className: 'text-3xl font-bold mb-12 flex items-center' }, 
+                        e('span', { className: 'w-8 h-1 mars-gradient mr-4' }),
+                        'Professional Journey'
+                    ),
+                    e('div', { className: 'space-y-12' },
+                        EXPERIENCE.map((exp, idx) => e('div', { key: idx, className: 'relative pl-8 border-l-2 border-slate-200' },
+                            e('div', { className: 'absolute -left-[9px] top-0 w-4 h-4 rounded-full border-2 border-orange-600 bg-slate-50' }),
+                            e('div', { className: 'mb-1 flex justify-between items-start flex-wrap gap-2' },
+                                e('h3', { className: 'text-xl font-bold text-slate-900' }, exp.role),
+                                e('span', { className: 'text-sm font-bold mono bg-slate-200 px-2 py-1 rounded' }, exp.period)
+                            ),
+                            e('div', { className: 'text-orange-600 font-semibold mb-4' }, exp.company),
+                            e('p', { className: 'text-slate-600 mb-4 italic' }, exp.description),
+                            e('ul', { className: 'space-y-2' },
+                                exp.details.map((detail, dIdx) => e('li', { key: dIdx, className: 'text-sm text-slate-700 flex items-start' },
+                                    e('span', { className: 'text-orange-500 mr-2 mt-1' }, '→'),
+                                    detail
+                                ))
+                            )
+                        ))
+                    )
+                )
+            );
+
+            const BlogView = () => e('section', { className: 'pt-32 pb-20 px-6' },
+                e('div', { className: 'max-w-4xl mx-auto' },
+                    e('h2', { className: 'text-4xl font-bold mb-4' }, 'Engineering Insights'),
+                    e('p', { className: 'text-slate-500 mb-12' }, 'Thoughts on software architecture, leadership, and technical strategy.'),
+                    e('div', { className: 'grid gap-8' },
+                        BLOG_POSTS.map(post => e('article', { key: post.id, className: 'group p-8 bg-white rounded-2xl shadow-sm border border-slate-100 hover:border-orange-200 hover:shadow-md transition-all' },
+                            e('div', { className: 'flex justify-between items-center mb-4' },
+                                e('span', { className: 'text-xs font-bold uppercase tracking-widest text-orange-600' }, post.tag),
+                                e('span', { className: 'text-xs text-slate-400' }, post.date)
+                            ),
+                            e('h3', { className: 'text-2xl font-bold mb-3 group-hover:text-orange-600 transition' }, post.title),
+                            e('p', { className: 'text-slate-600 mb-6' }, post.excerpt),
+                            e('button', { className: 'flex items-center text-sm font-bold text-slate-900' }, 
+                                'Read full post',
+                                e('i', { 'data-lucide': 'arrow-right', className: 'ml-2 w-4 h-4' })
+                            )
+                        ))
+                    )
+                )
+            );
+
+            const Footer = () => e('footer', { className: 'py-12 px-6 bg-slate-900 text-white' },
+                e('div', { className: 'max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center' },
+                    e('div', { className: 'mb-6 md:mb-0 text-center md:text-left' },
+                        e('p', { className: 'font-bold' }, 'William Marsman'),
+                        e('p', { className: 'text-slate-500 text-sm' }, 'Head of Software Engineering | Architect')
+                    ),
+                    e('div', { className: 'flex space-x-6' },
+                        e('a', { href: '#', className: 'hover:text-orange-500' }, 'LinkedIn'),
+                        e('a', { href: '#', className: 'hover:text-orange-500' }, 'GitHub'),
+                        e('a', { href: 'mailto:wl991552@dal.ca', className: 'hover:text-orange-500' }, 'Email')
+                    )
+                )
+            );
+
+            // Effect to re-run Lucide icons when view changes
+            React.useEffect(() => {
+                if (window.lucide) window.lucide.createIcons();
+            }, [view]);
+
+            return e('div', { className: 'min-h-screen' },
+                e(Header),
+                view === 'home' ? e(React.Fragment, null, e(Hero), e(ExperienceSection)) : e(BlogView),
+                e(Footer)
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(e(App));
+    </script>
+</body>
+</html>

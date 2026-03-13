@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReelData AI | Redefining Land-Based Aquaculture</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React & HTM (JSX-like syntax for no-compiler environments) -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/htm@3.1.1/dist/htm.umd.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .text-gradient {
+            background: linear-gradient(to right, #2dd4bf, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+            100% { transform: translateY(0px); }
+        }
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: 0;
+            opacity: 0.15;
+        }
+    </style>
+</head>
+<body class="bg-[#020617] text-white overflow-x-hidden">
+    <div id="root"></div>
+
+    <script>
+        const { useState, useEffect } = React;
+        const html = htm.bind(React.createElement);
+
+        const Navbar = () => {
+            const [isScrolled, setIsScrolled] = useState(false);
+
+            useEffect(() => {
+                const handleScroll = () => setIsScrolled(window.scrollY > 50);
+                window.addEventListener('scroll', handleScroll);
+                return () => window.removeEventListener('scroll', handleScroll);
+            }, []);
+
+            return html`
+                <nav class="fixed top-0 w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-[#020617]/90 backdrop-blur-md border-b border-white/10 py-3' : 'bg-transparent py-6'}">
+                    <div class="container mx-auto px-6 flex justify-between items-center">
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-8 bg-teal-500 rounded-lg flex items-center justify-center font-bold text-slate-900">R</div>
+                            <span class="text-xl font-bold tracking-tight">REELDATA<span class="text-teal-400">AI</span></span>
+                        </div>
+                        <div class="hidden md:flex items-center gap-8 text-sm font-medium text-slate-300">
+                            <a href="#" class="hover:text-teal-400 transition-colors">Solutions</a>
+                            <a href="#" class="hover:text-teal-400 transition-colors">Technology</a>
+                            <a href="#" class="hover:text-teal-400 transition-colors">Company</a>
+                            <a href="#" class="hover:text-teal-400 transition-colors">Sustainability</a>
+                            <button class="bg-teal-500 hover:bg-teal-400 text-slate-900 px-5 py-2.5 rounded-full font-semibold transition-all shadow-lg shadow-teal-500/20">
+                                Request Demo
+                            </button>
+                        </div>
+                    </div>
+                </nav>
+            `;
+        };
+
+        const Hero = () => {
+            return html`
+                <section class="relative min-h-screen flex items-center pt-20 overflow-hidden">
+                    <div class="blob w-[500px] h-[500px] bg-blue-600 top-[-100px] left-[-100px]"></div>
+                    <div class="blob w-[400px] h-[400px] bg-teal-500 bottom-[-50px] right-[-50px]"></div>
+
+                    <div class="container mx-auto px-6 relative z-10 grid lg:grid-cols-2 gap-16 items-center">
+                        <div>
+                            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-500/10 border border-teal-500/20 text-teal-400 text-xs font-semibold mb-8 uppercase tracking-widest">
+                                <span class="w-2 h-2 bg-teal-500 rounded-full animate-pulse"></span>
+                                <span>The AI Operating System for Aquaculture</span>
+                            </div>
+                            <h1 class="text-5xl lg:text-8xl font-bold leading-[1.1] mb-8">
+                                Scalable <br />
+                                <span class="text-gradient">Intelligence.</span><br />
+                                Sustainable Growth.
+                            </h1>
+                            <p class="text-xl text-slate-400 mb-10 max-w-lg leading-relaxed">
+                                ReelData provides land-based farms with real-time appetite detection, biomass estimation, and health monitoring to maximize profitability.
+                            </p>
+                            <div class="flex flex-wrap gap-4">
+                                <button class="bg-teal-500 hover:bg-teal-400 text-slate-900 px-10 py-4 rounded-2xl font-bold transition-all shadow-xl shadow-teal-500/30 text-lg">
+                                    Get Started
+                                </button>
+                                <button class="glass hover:bg-white/10 text-white px-10 py-4 rounded-2xl font-bold transition-all flex items-center gap-3 text-lg border-white/20">
+                                    <span>System Overview</span>
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 18 6-6-6-6"/></svg>
+                                </button>
+                            </div>
+                            
+                            <div class="mt-16 flex flex-col gap-4">
+                                <span class="text-xs uppercase tracking-[0.2em] text-slate-500 font-bold">Trusted by Industry Leaders</span>
+                                <div class="flex gap-8 items-center opacity-40 grayscale hover:grayscale-0 transition-all cursor-default">
+                                    <div class="font-black text-2xl tracking-tighter">SAMHERJI</div>
+                                    <div class="font-black text-2xl tracking-tighter">CERMAQ</div>
+                                    <div class="font-black text-2xl tracking-tighter">FIFAX</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="relative hidden lg:block">
+                            <div class="relative z-10 rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl animate-float">
+                                <div class="aspect-[4/5] bg-slate-900 flex flex-col items-center justify-center p-4 relative">
+                                    <!-- Visual Stub representing AI Analytics -->
+                                    <div class="w-full h-full rounded-3xl bg-[#0a1120] border border-white/5 overflow-hidden relative">
+                                        <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20"></div>
+                                        <div class="absolute inset-0 p-8 flex flex-col">
+                                            <div class="flex justify-between items-start mb-8">
+                                                <div class="space-y-1">
+                                                    <div class="text-[10px] uppercase tracking-widest text-teal-400 font-bold">Live Analysis: Tank 04</div>
+                                                    <div class="text-lg font-bold">Active Population Feeding</div>
+                                                </div>
+                                                <div class="px-2 py-1 rounded bg-red-500/20 text-red-400 text-[10px] font-bold animate-pulse uppercase">Rec: ON</div>
+                                            </div>
+                                            <div class="flex-1 flex items-center justify-center relative">
+                                                <!-- Simulated AI bounding boxes -->
+                                                <div class="absolute top-1/4 left-1/3 w-24 h-16 border border-teal-500/50 rounded-lg flex items-start p-1">
+                                                    <span class="text-[8px] bg-teal-500 text-slate-900 font-bold px-1 rounded">FISH_082</span>
+                                                </div>
+                                                <div class="absolute bottom-1/3 right-1/4 w-32 h-20 border border-teal-500/50 rounded-lg flex items-start p-1">
+                                                    <span class="text-[8px] bg-teal-500 text-slate-900 font-bold px-1 rounded">FISH_104</span>
+                                                </div>
+                                                <div class="text-teal-500/20">
+                                                    <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="0.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
+                                                </div>
+                                            </div>
+                                            <div class="mt-auto grid grid-cols-2 gap-4">
+                                                <div class="h-12 glass rounded-xl flex flex-col justify-center px-4">
+                                                    <span class="text-[8px] text-slate-500 uppercase font-bold">Appetite Score</span>
+                                                    <span class="text-teal-400 font-bold">8.4 / 10</span>
+                                                </div>
+                                                <div class="h-12 glass rounded-xl flex flex-col justify-center px-4">
+                                                    <span class="text-[8px] text-slate-500 uppercase font-bold">Feed Efficiency</span>
+                                                    <span class="text-teal-400 font-bold">+12.4%</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="absolute -top-12 -right-12 w-64 h-64 bg-teal-500/20 rounded-full blur-3xl"></div>
+                        </div>
+                    </div>
+                </section>
+            `;
+        };
+
+        const Stats = () => {
+            const metrics = [
+                { val: '90%', label: 'Wasted Feed Reduction', sub: 'Industry-leading precision' },
+                { val: '15%', label: 'Consumption Increase', sub: 'Optimized metabolic growth' },
+                { val: '$3M', label: 'Potential Profit Increase', sub: 'Per 10k MT annual production' },
+                { val: '99%', label: 'System Reliability', sub: 'High-availability architecture' },
+            ];
+
+            return html`
+                <section class="py-24 border-y border-white/5 bg-slate-950/50">
+                    <div class="container mx-auto px-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+                            ${metrics.map(m => html`
+                                <div class="relative group">
+                                    <div class="text-5xl font-bold text-white mb-3 group-hover:text-teal-400 transition-colors">${m.val}</div>
+                                    <div class="text-lg font-semibold text-slate-200 mb-1">${m.label}</div>
+                                    <div class="text-sm text-slate-500">${m.sub}</div>
+                                    <div class="absolute -left-4 top-0 w-1 h-full bg-teal-500/50 scale-y-0 group-hover:scale-y-100 transition-transform origin-top"></div>
+                                </div>
+                            `)}
+                        </div>
+                    </div>
+                </section>
+            `;
+        };
+
+        const ProductSection = () => {
+            const products = [
+                {
+                    id: 'reelappetite',
+                    name: 'ReelAppetite',
+                    tagline: 'AI Smart Feeding',
+                    desc: 'A fully autonomous feeding system that identifies population appetite in real-time, adjusting feed levels to maximize growth while eliminating waste.',
+                    features: ['Real-time pellet recognition', 'Automatic silo integration', 'Waste reduction of up to 90%']
+                },
+                {
+                    id: 'reelweight',
+                    name: 'ReelWeight',
+                    tagline: 'Autonomous Biomass Monitoring',
+                    desc: 'Non-intrusive weight estimation with industry-leading accuracy. Get precise biomass distribution within hours, not days, without handling fish.',
+                    features: ['Millimeter-precise sizing', 'Zero stress methodology', 'Actionable growth distribution']
+                },
+                {
+                    id: 'reelvision',
+                    name: 'ReelVision',
+                    tagline: 'Advanced AI Edge Cameras',
+                    desc: 'Purpose-built hardware designed for the harsh environments of land-based tanks. High-definition imaging optimized for computer vision.',
+                    features: ['Ruggedized housing', 'Cloud & Edge dual processing', 'Standard IP camera compatibility']
+                }
+            ];
+
+            return html`
+                <section class="py-32 relative">
+                    <div class="container mx-auto px-6">
+                        <div class="max-w-3xl mb-24">
+                            <h2 class="text-4xl lg:text-6xl font-bold mb-8">Comprehensive <br /><span class="text-gradient">AI Solutions.</span></h2>
+                            <p class="text-xl text-slate-400">Our suite of products works in harmony to provide a holistic view of your farm's performance and health.</p>
+                        </div>
+
+                        <div class="grid lg:grid-cols-3 gap-8">
+                            ${products.map(p => html`
+                                <div class="glass p-10 rounded-[2rem] hover:bg-white/5 transition-all group flex flex-col h-full">
+                                    <div class="w-16 h-16 bg-teal-500/10 rounded-2xl flex items-center justify-center text-teal-400 mb-8 group-hover:bg-teal-500 group-hover:text-slate-900 transition-all duration-500">
+                                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            ${p.id === 'reelappetite' ? html`<path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5c0 1.66 4 3 9 3s9-1.34 9-3"/><path d="M21 5v14c0 1.66-4 3-9 3s-9-1.34-9-3V5"/>` : ''}
+                                            ${p.id === 'reelweight' ? html`<rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>` : ''}
+                                            ${p.id === 'reelvision' ? html`<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>` : ''}
+                                        </svg>
+                                    </div>
+                                    <div class="text-xs font-bold text-teal-400 uppercase tracking-widest mb-2">${p.tagline}</div>
+                                    <h3 class="text-3xl font-bold mb-6">${p.name}</h3>
+                                    <p class="text-slate-400 leading-relaxed mb-8 flex-1">${p.desc}</p>
+                                    
+                                    <ul class="space-y-3 mb-10">
+                                        ${p.features.map(f => html`
+                                            <li class="flex items-center gap-3 text-sm text-slate-300">
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" class="text-teal-500"><path d="M20 6 9 17l-5-5"/></svg>
+                                                ${f}
+                                            </li>
+                                        `)}
+                                    </ul>
+
+                                    <button class="w-full py-4 rounded-xl border border-white/10 hover:border-teal-500/50 hover:bg-teal-500/5 transition-all font-bold flex justify-between items-center px-6 group/btn">
+                                        <span>Learn More</span>
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="group-hover/btn:translate-x-1 transition-transform"><path d="M5 12h14m-7-7 7 7-7 7"/></svg>
+                                    </button>
+                                </div>
+                            `)}
+                        </div>
+                    </div>
+                </section>
+            `;
+        };
+
+        const Footer = () => {
+            return html`
+                <footer class="bg-[#01040f] pt-32 pb-16 border-t border-white/5">
+                    <div class="container mx-auto px-6">
+                        <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-16 mb-24">
+                            <div class="col-span-1 lg:col-span-1">
+                                <div class="flex items-center gap-2 mb-8">
+                                    <div class="w-10 h-10 bg-teal-500 rounded-xl flex items-center justify-center font-bold text-slate-900 text-xl">R</div>
+                                    <span class="text-2xl font-bold tracking-tight">REELDATA<span class="text-teal-400">AI</span></span>
+                                </div>
+                                <p class="text-slate-500 leading-relaxed mb-8 max-w-xs">
+                                    Revolutionizing land-based aquaculture through advanced computer vision and artificial intelligence.
+                                </p>
+                                <div class="flex gap-4">
+                                    <div class="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center hover:bg-teal-500 hover:text-slate-900 transition-all cursor-pointer">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+                                    </div>
+                                    <div class="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center hover:bg-teal-500 hover:text-slate-900 transition-all cursor-pointer">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.84 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/></svg>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-white mb-8 text-lg">Solutions</h4>
+                                <ul class="space-y-4 text-slate-500">
+                                    <li><a href="#" class="hover:text-teal-400 transition-colors">ReelAppetite Feeding</a></li>
+                                    <li><a href="#" class="hover:text-teal-400 transition-colors">ReelWeight Biomass</a></li>
+                                    <li><a href="#" class="hover:text-teal-400 transition-colors">ReelVision Hardware</a></li>
+                                    <li><a href="#" class="hover:text-teal-400 transition-colors">API & Integrations</a></li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-white mb-8 text-lg">Company</h4>
+                                <ul class="space-y-4 text-slate-500">
+                                    <li><a href="#" class="hover:text-teal-400 transition-colors">About Our Vision</a></li>
+                                    <li><a href="#" class="hover:text-teal-400 transition-colors">Latest News</a></li>
+                                    <li><a href="#" class="hover:text-teal-400 transition-colors">Careers</a></li>
+                                    <li><a href="#" class="hover:text-teal-400 transition-colors">Contact Us</a></li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-white mb-8 text-lg">Stay Updated</h4>
+                                <p class="text-slate-500 text-sm mb-6">Join our newsletter for the latest in aquaculture tech.</p>
+                                <div class="flex gap-2">
+                                    <input type="email" placeholder="Email address" class="bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-sm flex-1 focus:outline-none focus:border-teal-500/50" />
+                                    <button class="bg-teal-500 text-slate-900 p-3 rounded-lg hover:bg-teal-400 transition-all">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14m-7-7 7 7-7 7"/></svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex flex-col md:flex-row justify-between items-center pt-12 border-t border-white/5 text-xs text-slate-600 gap-6 text-center md:text-left">
+                            <p>© 2026 ReelData AI Inc. All rights reserved.</p>
+                            <div class="flex gap-8">
+                                <a href="#" class="hover:text-slate-400 transition-colors">Privacy Policy</a>
+                                <a href="#" class="hover:text-slate-400 transition-colors">Terms of Service</a>
+                                <a href="#" class="hover:text-slate-400 transition-colors">Cookie Policy</a>
+                            </div>
+                        </div>
+                    </div>
+                </footer>
+            `;
+        };
+
+        const App = () => {
+            return html`
+                <div class="min-h-screen">
+                    <${Navbar} />
+                    <main>
+                        <${Hero} />
+                        <${Stats} />
+                        <${ProductSection} />
+                        
+                        <!-- CTA Section -->
+                        <section class="py-32 px-6">
+                            <div class="container mx-auto max-w-6xl relative">
+                                <div class="absolute inset-0 bg-gradient-to-br from-teal-500 to-blue-600 blur-[80px] opacity-10"></div>
+                                <div class="relative bg-gradient-to-br from-slate-900 to-[#020617] rounded-[3rem] p-12 lg:p-24 border border-white/10 text-center overflow-hidden">
+                                    <div class="absolute top-0 right-0 w-64 h-64 bg-teal-500/10 rounded-full blur-3xl"></div>
+                                    <h2 class="text-4xl lg:text-6xl font-bold mb-8 relative z-10">Future-proof your <br /><span class="text-teal-400">aquaculture operations.</span></h2>
+                                    <p class="text-slate-400 text-xl mb-12 max-w-2xl mx-auto relative z-10 leading-relaxed">
+                                        Start optimizing with the world's most advanced AI for land-based fish farming. Let's build a sustainable future together.
+                                    </p>
+                                    <div class="flex flex-col sm:flex-row gap-4 justify-center relative z-10">
+                                        <button class="bg-teal-500 hover:bg-teal-400 text-slate-900 px-10 py-5 rounded-2xl font-bold text-lg transition-all shadow-xl shadow-teal-500/20">
+                                            Request a Demo
+                                        </button>
+                                        <button class="bg-white/5 hover:bg-white/10 text-white border border-white/10 px-10 py-5 rounded-2xl font-bold text-lg transition-all">
+                                            Contact Sales
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </main>
+                    <${Footer} />
+                </div>
+            `;
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(React.createElement(App));
+    </script>
+</body>
+</html>

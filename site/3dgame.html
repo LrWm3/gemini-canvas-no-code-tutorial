@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Dolphin Dash 3D</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000;
+            touch-action: none; /* Prevent browser handling of pinch/zoom/swipe */
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        #game-canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        /* UI Layer overrides */
+        #ui-layer {
+            z-index: 10;
+        }
+
+        /* Virtual Joystick */
+        #joystick-base {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+            display: none;
+            z-index: 20;
+            pointer-events: none; /* Let touches pass to document */
+            transform: translate(-50%, -50%); /* Center on touch */
+        }
+
+        #joystick-knob {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            margin-top: -20px;
+            margin-left: -20px;
+            pointer-events: none;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        .screen-overlay {
+            background: radial-gradient(circle, rgba(0,68,102,0.8) 0%, rgba(0,15,30,0.95) 100%);
+        }
+        
+        .title-glow {
+            text-shadow: 0 0 20px rgba(0, 170, 255, 0.8), 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+    </style>
+</head>
+<body class="text-white select-none">
+
+    <!-- Game Canvas -->
+    <canvas id="game-canvas"></canvas>
+
+    <!-- Mobile Virtual Joystick UI -->
+    <div id="joystick-base">
+        <div id="joystick-knob"></div>
+    </div>
+
+    <!-- UI Overlay Layer -->
+    <div id="ui-layer" class="absolute inset-0 pointer-events-none flex flex-col justify-between p-4 sm:p-6">
+        
+        <!-- HUD (Score & Instructions) -->
+        <div id="hud" class="flex justify-between items-start hidden">
+            <div class="bg-black/40 backdrop-blur-md px-6 py-3 rounded-2xl border border-white/20 shadow-lg pointer-events-auto">
+                <div class="text-sm text-blue-200 font-bold uppercase tracking-wider mb-1"><i class="fa-solid fa-star text-yellow-400 mr-2"></i>Score</div>
+                <div id="score-display" class="text-3xl font-black text-white leading-none">0</div>
+            </div>
+            
+            <div class="hidden sm:block text-right text-sm text-white/80 bg-black/30 px-4 py-2 rounded-xl backdrop-blur-sm">
+                <p><b>W/S</b> : Pitch (Dive/Surface)</p>
+                <p><b>A/D</b> : Turn (Yaw)</p>
+                <p><b>Space</b> : Boost Speed</p>
+            </div>
+            
+            <!-- Mobile Hints -->
+            <div class="sm:hidden text-right text-xs text-white/80 bg-black/30 px-3 py-2 rounded-xl backdrop-blur-sm">
+                <p>Drag Left Side to Steer</p>
+                <p>Hold Right Side to Boost</p>
+            </div>
+        </div>
+
+        <!-- Start Screen -->
+        <div id="start-screen" class="absolute inset-0 screen-overlay flex flex-col items-center justify-center pointer-events-auto transition-opacity duration-500">
+            <i class="fa-solid fa-water text-6xl text-blue-400 mb-4 animate-bounce"></i>
+            <h1 class="text-6xl sm:text-8xl font-black italic tracking-tighter title-glow mb-2">DOLPHIN<br/>DASH</h1>
+            <p class="text-lg text-blue-200 mb-8 text-center max-w-md px-4">Eat small yellow fish to grow.<br/>Avoid big red sharks.<br/>Build speed to jump out of the water!</p>
+            
+            <button id="start-btn" class="group relative px-8 py-4 bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full font-bold text-xl shadow-[0_0_20px_rgba(0,170,255,0.5)] hover:shadow-[0_0_30px_rgba(0,170,255,0.8)] transition-all hover:scale-105 active:scale-95 text-white overflow-hidden">
+                <span class="relative z-10"><i class="fa-solid fa-play mr-2"></i> Play Now</span>
+                <div class="absolute inset-0 h-full w-full bg-white/20 transform scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-300 z-0"></div>
+            </button>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="game-over-screen" class="absolute inset-0 screen-overlay flex flex-col items-center justify-center pointer-events-auto hidden opacity-0 transition-opacity duration-500">
+            <i class="fa-solid fa-skull text-6xl text-red-500 mb-4"></i>
+            <h1 class="text-5xl sm:text-7xl font-black tracking-tight text-red-500 mb-2">EATEN!</h1>
+            <p class="text-2xl text-white mb-2">Final Score</p>
+            <div id="final-score" class="text-6xl font-black text-yellow-400 mb-8 text-shadow-lg">0</div>
+            
+            <button id="restart-btn" class="px-8 py-4 bg-gradient-to-r from-red-600 to-orange-500 rounded-full font-bold text-xl shadow-lg hover:shadow-red-500/50 transition-all hover:scale-105 active:scale-95 text-white">
+                <i class="fa-solid fa-rotate-right mr-2"></i> Play Again
+            </button>
+        </div>
+
+    </div>
+
+    <!-- GAME LOGIC -->
+    <script>
+        // --- Core Variables ---
+        let scene, camera, renderer;
+        let player, playerVelocity, playerTargetRotation;
+        let waterPlane;
+        
+        let gameState = 'start'; // start, playing, gameover
+        let score = 0;
+        let playerSize = 1;
+        let baseThrust = 0.4;
+        let maxThrust = 0.8;
+        
+        const FOOD_COUNT = 40;
+        const ENEMY_COUNT = 10;
+        const foodPool = [];
+        const enemyPool = [];
+        
+        // Input tracking
+        const keys = { w: false, a: false, s: false, d: false, space: false };
+        const joystick = { x: 0, y: 0 };
+        let isBoosting = false;
+        
+        // Touch tracking
+        let joyTouchId = null;
+        let joyOrigin = { x: 0, y: 0 };
+        const joyBase = document.getElementById('joystick-base');
+        const joyKnob = document.getElementById('joystick-knob');
+        const JOY_RADIUS = 40;
+
+        // Camera follow targets
+        const cameraTargetPos = new THREE.Vector3();
+        const cameraTargetLook = new THREE.Vector3();
+
+        // Environment Colors
+        const COLOR_UNDERWATER = 0x004477;
+        const COLOR_SKY = 0x87CEEB;
+
+        // --- Initialization ---
+        function init() {
+            // 1. Setup Scene, Camera, Renderer
+            const canvas = document.getElementById('game-canvas');
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(COLOR_UNDERWATER);
+            scene.fog = new THREE.FogExp2(COLOR_UNDERWATER, 0.015);
+
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+            // 2. Lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+
+            const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            dirLight.position.set(50, 200, 50);
+            dirLight.castShadow = true;
+            dirLight.shadow.camera.top = 100;
+            dirLight.shadow.camera.bottom = -100;
+            dirLight.shadow.camera.left = -100;
+            dirLight.shadow.camera.right = 100;
+            scene.add(dirLight);
+
+            // 3. Create Environment (Water Surface)
+            const waterGeo = new THREE.PlaneGeometry(2000, 2000);
+            const waterMat = new THREE.MeshPhongMaterial({
+                color: 0x00aaff,
+                transparent: true,
+                opacity: 0.6,
+                shininess: 90,
+                side: THREE.DoubleSide
+            });
+            waterPlane = new THREE.Mesh(waterGeo, waterMat);
+            waterPlane.rotation.x = -Math.PI / 2;
+            waterPlane.position.y = 0;
+            scene.add(waterPlane);
+
+            // 4. Create Player (Dolphin)
+            createPlayer();
+
+            // 5. Create Entities
+            for (let i = 0; i < FOOD_COUNT; i++) {
+                foodPool.push(createFish(false));
+            }
+            for (let i = 0; i < ENEMY_COUNT; i++) {
+                enemyPool.push(createFish(true));
+            }
+
+            // 6. Event Listeners
+            window.addEventListener('resize', onWindowResize);
+            setupInput();
+
+            // 7. Start Loop
+            requestAnimationFrame(animate);
+        }
+
+        function createPlayer() {
+            player = new THREE.Group();
+            playerVelocity = new THREE.Vector3();
+            playerTargetRotation = new THREE.Quaternion();
+
+            // Material
+            const dolphinMat = new THREE.MeshPhongMaterial({ color: 0x3388ff, shininess: 60 });
+            const whiteMat = new THREE.MeshPhongMaterial({ color: 0xdddddd });
+
+            // Body (elongated sphere)
+            const bodyGeo = new THREE.SphereGeometry(1, 16, 16);
+            const body = new THREE.Mesh(bodyGeo, dolphinMat);
+            body.scale.set(0.8, 1, 3);
+            player.add(body);
+
+            // Snout
+            const snoutGeo = new THREE.ConeGeometry(0.3, 1.5, 16);
+            const snout = new THREE.Mesh(snoutGeo, dolphinMat);
+            snout.rotation.x = Math.PI / 2;
+            snout.position.set(0, -0.2, -3.2);
+            player.add(snout);
+
+            // Dorsal Fin
+            const finGeo = new THREE.ConeGeometry(0.2, 1.2, 8);
+            const dorsal = new THREE.Mesh(finGeo, dolphinMat);
+            dorsal.position.set(0, 1, -0.5);
+            dorsal.rotation.x = -0.3;
+            player.add(dorsal);
+
+            // Side Flippers
+            const flipperGeo = new THREE.ConeGeometry(0.2, 1, 8);
+            const flipR = new THREE.Mesh(flipperGeo, dolphinMat);
+            flipR.position.set(0.8, -0.2, -1);
+            flipR.rotation.z = -Math.PI / 3;
+            flipR.rotation.x = Math.PI / 2;
+            player.add(flipR);
+
+            const flipL = new THREE.Mesh(flipperGeo, dolphinMat);
+            flipL.position.set(-0.8, -0.2, -1);
+            flipL.rotation.z = Math.PI / 3;
+            flipL.rotation.x = Math.PI / 2;
+            player.add(flipL);
+
+            // Tail
+            const tailGeo = new THREE.ConeGeometry(0.2, 1.5, 8);
+            const tail = new THREE.Mesh(tailGeo, dolphinMat);
+            tail.position.set(0, 0, 3);
+            tail.scale.set(4, 1, 1);
+            tail.rotation.x = Math.PI / 2;
+            player.add(tail);
+            
+            // Eyes
+            const eyeGeo = new THREE.SphereGeometry(0.15, 8, 8);
+            const eyeMat = new THREE.MeshBasicMaterial({color: 0x000000});
+            const eyeR = new THREE.Mesh(eyeGeo, eyeMat);
+            eyeR.position.set(0.4, 0.2, -2.5);
+            player.add(eyeR);
+            const eyeL = new THREE.Mesh(eyeGeo, eyeMat);
+            eyeL.position.set(-0.4, 0.2, -2.5);
+            player.add(eyeL);
+
+            // Start underwater
+            player.position.set(0, -20, 0);
+            scene.add(player);
+        }
+
+        function createFish(isEnemy) {
+            const group = new THREE.Group();
+            
+            const mat = new THREE.MeshPhongMaterial({ 
+                color: isEnemy ? 0xff3344 : 0xffdd00,
+                shininess: 30
+            });
+
+            if (isEnemy) {
+                // Shark / Enemy
+                const bodyGeo = new THREE.SphereGeometry(1, 16, 16);
+                const body = new THREE.Mesh(bodyGeo, mat);
+                body.scale.set(1, 1.5, 3.5);
+                group.add(body);
+                
+                // Dorsal
+                const finGeo = new THREE.ConeGeometry(0.5, 2, 8);
+                const dorsal = new THREE.Mesh(finGeo, mat);
+                dorsal.position.set(0, 1.5, -0.5);
+                dorsal.rotation.x = -0.2;
+                group.add(dorsal);
+
+                group.scale.set(2.5, 2.5, 2.5);
+                group.userData = { type: 'enemy', speed: 0.3 + Math.random() * 0.2, radius: 3.5 };
+            } else {
+                // Food Fish
+                const bodyGeo = new THREE.SphereGeometry(0.5, 8, 8);
+                const body = new THREE.Mesh(bodyGeo, mat);
+                body.scale.set(0.6, 1, 2);
+                group.add(body);
+                
+                // Tail
+                const tailGeo = new THREE.ConeGeometry(0.1, 0.8, 4);
+                const tail = new THREE.Mesh(tailGeo, mat);
+                tail.position.set(0, 0, 1);
+                tail.rotation.x = Math.PI / 2;
+                group.add(tail);
+
+                group.scale.set(1.5, 1.5, 1.5);
+                group.userData = { type: 'food', speed: 0.1 + Math.random() * 0.2, radius: 1.0 };
+            }
+
+            resetEntityPosition(group, true); // initial random far spawn
+            scene.add(group);
+            return group;
+        }
+
+        function resetEntityPosition(entity, initial = false) {
+            // Spawn around player
+            const angle = Math.random() * Math.PI * 2;
+            // If initial, spawn anywhere. If respawn, spawn ahead of player
+            const distance = initial ? (50 + Math.random() * 150) : (100 + Math.random() * 100);
+            
+            let spawnX = player ? player.position.x + Math.sin(angle) * distance : Math.sin(angle) * distance;
+            let spawnZ = player ? player.position.z + Math.cos(angle) * distance : Math.cos(angle) * distance;
+            
+            // Prefer deeper water for enemies, random for food
+            let spawnY = -5 - Math.random() * 50; 
+            if (entity.userData.type === 'enemy') spawnY -= 20;
+
+            entity.position.set(spawnX, spawnY, spawnZ);
+            
+            // Look roughly horizontally
+            entity.rotation.set(0, Math.random() * Math.PI * 2, 0);
+        }
+
+        // --- Controls & Input ---
+        function setupInput() {
+            // Keyboard
+            window.addEventListener('keydown', (e) => {
+                if (e.code === 'KeyW') keys.w = true;
+                if (e.code === 'KeyS') keys.s = true;
+                if (e.code === 'KeyA') keys.a = true;
+                if (e.code === 'KeyD') keys.d = true;
+                if (e.code === 'Space') keys.space = true;
+            });
+            window.addEventListener('keyup', (e) => {
+                if (e.code === 'KeyW') keys.w = false;
+                if (e.code === 'KeyS') keys.s = false;
+                if (e.code === 'KeyA') keys.a = false;
+                if (e.code === 'KeyD') keys.d = false;
+                if (e.code === 'Space') keys.space = false;
+            });
+
+            // Touch
+            document.addEventListener('touchstart', handleTouchStart, { passive: false });
+            document.addEventListener('touchmove', handleTouchMove, { passive: false });
+            document.addEventListener('touchend', handleTouchEnd, { passive: false });
+            document.addEventListener('touchcancel', handleTouchEnd, { passive: false });
+
+            // UI Buttons
+            document.getElementById('start-btn').addEventListener('click', startGame);
+            document.getElementById('restart-btn').addEventListener('click', startGame);
+        }
+
+        function handleTouchStart(e) {
+            if (gameState !== 'playing') return;
+            
+            // Prevent default to avoid scrolling/zooming EXCEPT on UI buttons
+            if (e.target.tagName !== 'BUTTON') {
+                e.preventDefault();
+            }
+
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                const touch = e.changedTouches[i];
+                if (touch.clientX < window.innerWidth / 2) {
+                    // Left half = Joystick
+                    joyTouchId = touch.identifier;
+                    joyOrigin = { x: touch.clientX, y: touch.clientY };
+                    
+                    // Show UI
+                    joyBase.style.display = 'block';
+                    joyBase.style.left = touch.clientX + 'px';
+                    joyBase.style.top = touch.clientY + 'px';
+                    joyKnob.style.transform = `translate(0px, 0px)`;
+                    
+                    joystick.x = 0;
+                    joystick.y = 0;
+                } else {
+                    // Right half = Boost
+                    isBoosting = true;
+                }
+            }
+        }
+
+        function handleTouchMove(e) {
+            if (gameState !== 'playing') return;
+            e.preventDefault();
+
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                const touch = e.changedTouches[i];
+                if (touch.identifier === joyTouchId) {
+                    let dx = touch.clientX - joyOrigin.x;
+                    let dy = touch.clientY - joyOrigin.y;
+                    
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    if (distance > JOY_RADIUS) {
+                        dx = (dx / distance) * JOY_RADIUS;
+                        dy = (dy / distance) * JOY_RADIUS;
+                    }
+
+                    joyKnob.style.transform = `translate(${dx}px, ${dy}px)`;
+                    
+                    // Normalize to -1 to 1
+                    joystick.x = dx / JOY_RADIUS;
+                    joystick.y = dy / JOY_RADIUS;
+                }
+            }
+        }
+
+        function handleTouchEnd(e) {
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                const touch = e.changedTouches[i];
+                if (touch.identifier === joyTouchId) {
+                    joyTouchId = null;
+                    joyBase.style.display = 'none';
+                    joystick.x = 0;
+                    joystick.y = 0;
+                } else if (touch.clientX >= window.innerWidth / 2) {
+                    isBoosting = false;
+                }
+            }
+        }
+
+        // --- Game Flow ---
+        function startGame() {
+            gameState = 'playing';
+            score = 0;
+            playerSize = 1;
+            baseThrust = 0.5;
+            updateScoreUI();
+            
+            // Reset Player
+            player.position.set(0, -20, 0);
+            player.rotation.set(0, 0, 0);
+            playerVelocity.set(0, 0, 0);
+            player.scale.set(1, 1, 1);
+
+            // Reset Entities
+            foodPool.forEach(f => resetEntityPosition(f, true));
+            enemyPool.forEach(e => resetEntityPosition(e, true));
+
+            // UI
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('start-screen').classList.remove('flex');
+            document.getElementById('game-over-screen').classList.add('hidden');
+            document.getElementById('game-over-screen').classList.remove('flex');
+            document.getElementById('hud').classList.remove('hidden');
+        }
+
+        function gameOver() {
+            gameState = 'gameover';
+            document.getElementById('hud').classList.add('hidden');
+            
+            const goScreen = document.getElementById('game-over-screen');
+            goScreen.classList.remove('hidden');
+            goScreen.classList.add('flex');
+            
+            // Fade in effect
+            setTimeout(() => {
+                goScreen.classList.remove('opacity-0');
+            }, 50);
+            
+            document.getElementById('final-score').innerText = score;
+        }
+
+        function updateScoreUI() {
+            document.getElementById('score-display').innerText = score;
+        }
+
+        // --- Main Update Loop ---
+        function animate() {
+            requestAnimationFrame(animate);
+
+            if (gameState === 'playing') {
+                updatePlayer();
+                updateCamera();
+                updateEntities();
+                updateEnvironment();
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        function updatePlayer() {
+            const inWater = player.position.y <= 0;
+
+            if (inWater) {
+                // --- UNDERWATER PHYSICS ---
+                // Gather Inputs
+                let pitchInput = (keys.w ? 1 : 0) + (keys.s ? -1 : 0);
+                let yawInput = (keys.a ? 1 : 0) + (keys.d ? -1 : 0);
+                
+                // Add mobile joystick
+                if (joyTouchId !== null) {
+                    pitchInput = joystick.y; // down is positive
+                    yawInput = -joystick.x;  // right is negative yaw
+                }
+
+                // Apply Rotations to Player
+                player.rotateX(pitchInput * 0.05);
+                player.rotateY(yawInput * 0.05);
+
+                // Auto level the roll (Z rotation) + Bank on turn
+                const targetRoll = yawInput * 0.8; 
+                player.rotation.z = THREE.MathUtils.lerp(player.rotation.z, targetRoll, 0.1);
+
+                // Calculate Forward Velocity
+                const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(player.quaternion);
+                
+                // Speed Calculation
+                const isBoostActive = keys.space || isBoosting;
+                const targetSpeed = (baseThrust + playerSize * 0.05) * (isBoostActive ? 2.5 : 1.0);
+                
+                // Lerp velocity for smooth acceleration/deceleration
+                playerVelocity.lerp(forward.multiplyScalar(targetSpeed), 0.1);
+
+            } else {
+                // --- AIR PHYSICS (JUMPING) ---
+                // Apply Gravity
+                playerVelocity.y -= 0.025; 
+                
+                // Slowly pitch down based on Y velocity to simulate a natural arc
+                player.rotation.x = THREE.MathUtils.lerp(player.rotation.x, -Math.sign(playerVelocity.y) * 0.5, 0.05);
+                // Level out roll
+                player.rotation.z = THREE.MathUtils.lerp(player.rotation.z, 0, 0.05);
+            }
+
+            // Apply Velocity
+            player.position.add(playerVelocity);
+
+            // Clamp max depth
+            if (player.position.y < -200) {
+                player.position.y = -200;
+                playerVelocity.y = 0;
+            }
+        }
+
+        function updateCamera() {
+            // Chase camera setup
+            const offset = new THREE.Vector3(0, 6 * playerSize, 15 * playerSize);
+            offset.applyQuaternion(player.quaternion);
+            offset.add(player.position);
+
+            const lookAhead = new THREE.Vector3(0, 0, -10);
+            lookAhead.applyQuaternion(player.quaternion);
+            lookAhead.add(player.position);
+
+            // Smoothly move camera
+            camera.position.lerp(offset, 0.1);
+            cameraTargetLook.lerp(lookAhead, 0.1);
+            camera.lookAt(cameraTargetLook);
+        }
+
+        function updateEnvironment() {
+            // Keep water plane centered on player horizontally
+            waterPlane.position.x = player.position.x;
+            waterPlane.position.z = player.position.z;
+
+            // Fog and background based on camera position (above/below water)
+            if (camera.position.y > 0) {
+                scene.background.lerp(new THREE.Color(COLOR_SKY), 0.1);
+                scene.fog.color.lerp(new THREE.Color(COLOR_SKY), 0.1);
+                scene.fog.density = 0.002; // thin air fog
+            } else {
+                scene.background.lerp(new THREE.Color(COLOR_UNDERWATER), 0.1);
+                scene.fog.color.lerp(new THREE.Color(COLOR_UNDERWATER), 0.1);
+                // Thicker fog deeper down
+                const depth = Math.max(0, -camera.position.y);
+                const targetDensity = 0.01 + (depth * 0.0001);
+                scene.fog.density = THREE.MathUtils.lerp(scene.fog.density, targetDensity, 0.1);
+            }
+        }
+
+        function updateEntities() {
+            const playerRadius = 1.5 * playerSize;
+            
+            const handleEntity = (entity) => {
+                // Move forward automatically
+                entity.translateZ(-entity.userData.speed);
+
+                // Add slight wobble
+                entity.rotation.x = Math.sin(Date.now() * 0.002 + entity.position.x) * 0.1;
+                entity.rotation.y += Math.sin(Date.now() * 0.001 + entity.position.z) * 0.01;
+
+                // Keep underwater
+                if (entity.position.y > -2) entity.position.y = -2;
+
+                // Distance from player
+                const dist = entity.position.distanceTo(player.position);
+
+                // If too far, respawn ahead
+                if (dist > 250) {
+                    resetEntityPosition(entity);
+                }
+
+                // Collision Check
+                const hitRadius = playerRadius + entity.userData.radius;
+                if (dist < hitRadius) {
+                    if (entity.userData.type === 'food') {
+                        // Eat food
+                        score += 10;
+                        updateScoreUI();
+                        
+                        // Grow slowly, cap at size 3
+                        if (playerSize < 3) {
+                            playerSize += 0.05;
+                            player.scale.set(playerSize, playerSize, playerSize);
+                        }
+                        
+                        // Respawn fish
+                        resetEntityPosition(entity);
+                        
+                    } else if (entity.userData.type === 'enemy') {
+                        // Hit enemy
+                        gameOver();
+                    }
+                }
+            };
+
+            foodPool.forEach(handleEntity);
+            enemyPool.forEach(handleEntity);
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // Initialize App
+        window.onload = init;
+
+    </script>
+</body>
+</html>

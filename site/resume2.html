@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>William Marsman | Head of Software Engineering</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React & ReactDOM (Production) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            scroll-behavior: smooth;
+            transition: background-color 0.3s ease;
+        }
+        
+        .mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .mars-gradient {
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+        }
+
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        /* Windows 95 Theme Overrides */
+        .win95-bg {
+            background-color: #008080 !important;
+            font-family: "MS Sans Serif", Arial, sans-serif !important;
+        }
+
+        .win95-window {
+            background-color: #c0c0c0 !important;
+            border: 2px solid;
+            border-color: #ffffff #808080 #808080 #ffffff !important;
+            box-shadow: none !important;
+            padding: 2px !important;
+        }
+
+        .win95-title-bar {
+            background: linear-gradient(90deg, #000080, #1084d0);
+            color: white;
+            padding: 3px 5px;
+            font-weight: bold;
+            font-size: 13px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .win95-button {
+            background-color: #c0c0c0 !important;
+            border: 2px solid;
+            border-color: #ffffff #000000 #000000 #ffffff !important;
+            color: black !important;
+            font-size: 12px !important;
+            padding: 4px 10px !important;
+            box-shadow: none !important;
+            text-transform: none !important;
+            letter-spacing: normal !important;
+            font-weight: normal !important;
+        }
+
+        .win95-button:active {
+            border-color: #000000 #ffffff #ffffff #000000 !important;
+            padding: 5px 9px 3px 11px !important;
+        }
+
+        .win95-text {
+            color: #000 !important;
+        }
+
+        .win95-inset {
+            background-color: #ffffff !important;
+            border: 2px solid;
+            border-color: #808080 #ffffff #ffffff #808080 !important;
+            padding: 10px !important;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #ea580c;
+            border-radius: 10px;
+        }
+        
+        .theme-classic ::-webkit-scrollbar-thumb {
+            background: #c0c0c0;
+            border: 1px solid #808080;
+            border-radius: 0;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900">
+    <div id="root"></div>
+
+    <script>
+        const e = React.createElement;
+
+        const BLOG_POSTS = [
+            {
+                id: 1,
+                title: "Scaling AI Teams in Aquaculture",
+                date: "March 2024",
+                excerpt: "Reflections on leading a diverse group of engineers to build reliable AI systems for land-based fish farms.",
+                tag: "Leadership"
+            },
+            {
+                id: 2,
+                title: "The Architecture of Command and Control",
+                date: "January 2024",
+                excerpt: "Applying London-style TDD and microservice criteria to large-scale NATO defense systems.",
+                tag: "Architecture"
+            },
+            {
+                id: 3,
+                title: "Minimizing Complexity: The Senior Engineer's Secret",
+                date: "Nov 2023",
+                excerpt: "Why I prefer selecting proven technologies over chasing the 'new and shiny' for production stability.",
+                tag: "Philosophy"
+            }
+        ];
+
+        const EXPERIENCE = [
+            {
+                company: "ReelData AI",
+                role: "Head of Software Engineering",
+                period: "2021 - Present",
+                location: "Halifax, NS",
+                description: "Leading a diverse team providing AI technologies for aquaculture.",
+                details: [
+                    "Lead Agile sprints and quarterly objective breakdowns in Jira.",
+                    "Architecting scalable systems with a focus on proven technologies.",
+                    "Active contributor in code reviews and architectural design."
+                ]
+            },
+            {
+                company: "MDA",
+                role: "Software Architect / Staff Engineer",
+                period: "2018 - 2021",
+                location: "Halifax, NS",
+                description: "Architectural lead for NATO's TRITON project.",
+                details: [
+                    "Introduced London-style TDD and integration test frameworks.",
+                    "Automated manual DevOps tasks, enabling team self-sufficiency.",
+                    "Defined release processes for all project artifacts."
+                ]
+            },
+            {
+                company: "Current Studios",
+                role: "Software Engineer",
+                period: "2017 - 2018",
+                description: "Integrating VR/AR and OpenCV for experimental hardware.",
+                details: [
+                    "Extended ARKit floor tracking for dynamic floor plan generation.",
+                    "Developed computer vision similarity detection for facial expressions."
+                ]
+            }
+        ];
+
+        function App() {
+            const [view, setView] = React.useState('home');
+            const [classicMode, setClassicMode] = React.useState(false);
+
+            React.useEffect(() => {
+                if (window.lucide) window.lucide.createIcons();
+                document.body.className = classicMode ? 'win95-bg theme-classic' : 'bg-slate-50 text-slate-900';
+            }, [view, classicMode]);
+
+            const Header = () => e('nav', { 
+                className: classicMode 
+                    ? 'fixed top-0 w-full z-50 win95-window' 
+                    : 'fixed top-0 w-full z-50 glass-nav border-b border-slate-200' 
+                },
+                classicMode && e('div', { className: 'win95-title-bar' }, 
+                    e('span', null, 'C:\\WINDOWS\\SYSTEM\\MARSMAN.EXE'),
+                    e('div', { className: 'flex space-x-1' }, 
+                        e('div', { className: 'win95-button py-0 px-1 leading-none' }, '_'),
+                        e('div', { className: 'win95-button py-0 px-1 leading-none' }, 'X')
+                    )
+                ),
+                e('div', { className: 'max-w-6xl mx-auto px-6 h-14 flex items-center justify-between' },
+                    e('div', { className: 'font-bold text-xl tracking-tighter' },
+                        e('span', { className: classicMode ? 'win95-text' : 'text-slate-900' }, 'WILLIAM'),
+                        e('span', { className: classicMode ? 'win95-text opacity-70' : 'text-orange-600' }, 'MARSMAN')
+                    ),
+                    e('div', { className: 'flex items-center space-x-4 md:space-x-8 text-sm font-semibold' },
+                        e('button', { 
+                            onClick: () => setView('home'), 
+                            className: classicMode ? 'win95-button' : `hover:text-orange-600 transition uppercase tracking-wider ${view === 'home' ? 'text-orange-600' : ''}` 
+                        }, 'Home'),
+                        e('button', { 
+                            onClick: () => setView('blog'), 
+                            className: classicMode ? 'win95-button' : `hover:text-orange-600 transition uppercase tracking-wider ${view === 'blog' ? 'text-orange-600' : ''}` 
+                        }, 'Blog'),
+                        e('button', {
+                            onClick: () => setClassicMode(!classicMode),
+                            className: classicMode 
+                                ? 'win95-button bg-orange-200 border-orange-800' 
+                                : 'px-3 py-1 rounded border border-slate-300 hover:bg-slate-100 transition flex items-center'
+                        }, 
+                        classicMode ? 'Exit Classic' : e(React.Fragment, null, e('i', { 'data-lucide': 'monitor', className: 'w-4 h-4 mr-2' }), 'Classic Mode')
+                        )
+                    )
+                )
+            );
+
+            const Hero = () => e('section', { className: `pt-32 pb-20 px-6 ${classicMode ? '' : 'bg-white'}` },
+                e('div', { className: classicMode ? 'max-w-4xl mx-auto win95-window p-6' : 'max-w-4xl mx-auto' },
+                    classicMode && e('div', { className: 'win95-title-bar mb-4' }, e('span', null, 'Welcome.txt')),
+                    e('div', { className: classicMode ? 'win95-inset' : '' },
+                        !classicMode && e('div', { className: 'inline-block px-3 py-1 rounded-full bg-orange-100 text-orange-700 text-xs font-bold uppercase mb-6 tracking-widest' }, 'Available for Consultation'),
+                        e('h1', { className: classicMode ? 'text-3xl font-bold mb-4 win95-text' : 'text-5xl md:text-7xl font-bold text-slate-900 mb-8 leading-tight tracking-tight' },
+                            'Architecting systems that scale and last.'
+                        ),
+                        e('p', { className: classicMode ? 'text-lg mb-6 win95-text' : 'text-xl text-slate-600 leading-relaxed mb-10 max-w-2xl' },
+                            'Head of Software Engineering at ReelData AI. From airborne radar processors to AI-driven aquaculture.'
+                        ),
+                        e('div', { className: 'flex flex-wrap gap-4' },
+                            e('button', { 
+                                onClick: () => setView('blog'), 
+                                className: classicMode ? 'win95-button' : 'px-8 py-4 mars-gradient text-white font-bold rounded-lg shadow-lg hover:shadow-orange-200 transition-all' 
+                            }, 'Read Blog'),
+                            e('div', { className: 'flex items-center space-x-4 px-4' },
+                                e('a', { href: '#', className: classicMode ? 'win95-text underline' : 'p-2 text-slate-400 hover:text-blue-600' }, classicMode ? 'LinkedIn' : e('i', { 'data-lucide': 'linkedin' })),
+                                e('a', { href: '#', className: classicMode ? 'win95-text underline' : 'p-2 text-slate-400 hover:text-black' }, classicMode ? 'GitHub' : e('i', { 'data-lucide': 'github' }))
+                            )
+                        )
+                    )
+                )
+            );
+
+            const ExperienceSection = () => e('section', { className: 'py-10 px-6' },
+                e('div', { className: 'max-w-4xl mx-auto' },
+                    e('h2', { className: classicMode ? 'win95-text font-bold text-2xl mb-6' : 'text-3xl font-bold mb-12 flex items-center' }, 
+                        !classicMode && e('span', { className: 'w-8 h-1 mars-gradient mr-4' }),
+                        'Professional Journey'
+                    ),
+                    e('div', { className: 'space-y-8' },
+                        EXPERIENCE.map((exp, idx) => e('div', { key: idx, className: classicMode ? 'win95-window p-4 mb-4' : 'relative pl-8 border-l-2 border-slate-200 mb-12' },
+                            classicMode && e('div', { className: 'win95-title-bar mb-2' }, e('span', null, exp.company)),
+                            !classicMode && e('div', { className: 'absolute -left-[9px] top-0 w-4 h-4 rounded-full border-2 border-orange-600 bg-slate-50' }),
+                            e('div', { className: classicMode ? 'win95-inset' : '' },
+                                e('div', { className: 'mb-1 flex justify-between items-start flex-wrap gap-2' },
+                                    e('h3', { className: 'text-xl font-bold' }, exp.role),
+                                    e('span', { className: classicMode ? 'text-xs' : 'text-sm font-bold mono bg-slate-200 px-2 py-1 rounded' }, exp.period)
+                                ),
+                                e('div', { className: classicMode ? 'font-bold' : 'text-orange-600 font-semibold mb-4' }, exp.company),
+                                e('p', { className: 'mb-4 italic opacity-80' }, exp.description),
+                                e('ul', { className: 'space-y-2' },
+                                    exp.details.map((detail, dIdx) => e('li', { key: dIdx, className: 'text-sm flex items-start' },
+                                        e('span', { className: 'mr-2' }, '•'),
+                                        detail
+                                    ))
+                                )
+                            )
+                        ))
+                    )
+                )
+            );
+
+            const BlogView = () => e('section', { className: 'pt-32 pb-20 px-6' },
+                e('div', { className: 'max-w-4xl mx-auto' },
+                    e('h2', { className: classicMode ? 'win95-text text-3xl font-bold mb-8' : 'text-4xl font-bold mb-12' }, 'Engineering Insights'),
+                    e('div', { className: 'grid gap-6' },
+                        BLOG_POSTS.map(post => e('article', { key: post.id, className: classicMode ? 'win95-window p-4' : 'group p-8 bg-white rounded-2xl border border-slate-100 hover:shadow-md transition-all' },
+                            classicMode && e('div', { className: 'win95-title-bar mb-3' }, e('span', null, post.tag)),
+                            e('div', { className: classicMode ? 'win95-inset' : '' },
+                                e('div', { className: 'flex justify-between items-center mb-4' },
+                                    !classicMode && e('span', { className: 'text-xs font-bold uppercase tracking-widest text-orange-600' }, post.tag),
+                                    e('span', { className: classicMode ? 'text-xs' : 'text-xs text-slate-400' }, post.date)
+                                ),
+                                e('h3', { className: 'text-2xl font-bold mb-3' }, post.title),
+                                e('p', { className: 'opacity-80 mb-6' }, post.excerpt),
+                                e('button', { className: classicMode ? 'win95-button' : 'flex items-center text-sm font-bold text-slate-900 hover:text-orange-600 transition' }, 
+                                    'Read full post',
+                                    !classicMode && e('i', { 'data-lucide': 'arrow-right', className: 'ml-2 w-4 h-4' })
+                                )
+                            )
+                        ))
+                    )
+                )
+            );
+
+            const Footer = () => e('footer', { className: classicMode ? 'win95-window m-6 p-4 text-center' : 'py-12 px-6 bg-slate-900 text-white' },
+                e('div', { className: 'max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center' },
+                    e('div', { className: 'mb-6 md:mb-0 text-center md:text-left' },
+                        e('p', { className: 'font-bold' }, 'William Marsman'),
+                        e('p', { className: 'opacity-50 text-sm' }, 'Head of Software Engineering | Halifax, NS')
+                    ),
+                    e('div', { className: 'flex space-x-6' },
+                        ['LinkedIn', 'GitHub', 'Email'].map(item => e('a', { key: item, href: '#', className: classicMode ? 'win95-text underline' : 'hover:text-orange-500' }, item))
+                    )
+                )
+            );
+
+            return e('div', { className: 'min-h-screen pb-10' },
+                e(Header),
+                view === 'home' ? e(React.Fragment, null, e(Hero), e(ExperienceSection)) : e(BlogView),
+                e(Footer)
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(e(App));
+    </script>
+</body>
+</html>

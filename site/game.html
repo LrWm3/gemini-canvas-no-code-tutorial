@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cricket Rancher</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://lucide.dev/scripts/lucide.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #1a1a1a;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            touch-action: manipulation;
+        }
+        .grid-cell {
+            aspect-ratio: 1/1;
+        }
+        .cricket {
+            transition: all 0.3s ease-out;
+            pointer-events: none;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-4px) scale(1.1); }
+        }
+        .cricket-jump {
+            animation: bounce 0.4s ease-in-out;
+        }
+        .bg-grass {
+            background-color: #2d3e2d;
+            background-image: radial-gradient(#3a4d3a 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useCallback } = React;
+
+        const GRID_SIZE = 15;
+        const INITIAL_CRICKETS = 10;
+        const BREED_COUNT = 25;
+        const MAX_CRICKETS = 500; // Performance cap
+        const TICK_RATE = 1000; // 1 second
+        const STARVATION_THRESHOLD = 5; // Crickets can go 5 ticks without food before dying
+        const FOOD_SPAWN_RATE = 0.3; // Chance per tick for food to appear
+
+        const App = () => {
+            const [crickets, setCrickets] = useState([]);
+            const [food, setFood] = useState([]);
+            const [stats, setStats] = useState({ totalBorn: 10, deaths: 0, highestPop: 10 });
+            const [message, setMessage] = useState("Welcome to Cricket Rancher!");
+
+            // Initialize game
+            useEffect(() => {
+                const initial = Array.from({ length: INITIAL_CRICKETS }).map((_, i) => ({
+                    id: i,
+                    x: Math.floor(Math.random() * GRID_SIZE),
+                    y: Math.floor(Math.random() * GRID_SIZE),
+                    hunger: 0,
+                    age: 0
+                }));
+                setCrickets(initial);
+            }, []);
+
+            const spawnFood = useCallback(() => {
+                if (Math.random() < FOOD_SPAWN_RATE) {
+                    const newFood = {
+                        id: Date.now() + Math.random(),
+                        x: Math.floor(Math.random() * GRID_SIZE),
+                        y: Math.floor(Math.random() * GRID_SIZE)
+                    };
+                    setFood(prev => [...prev.slice(-30), newFood]); // Cap food on screen
+                }
+            }, []);
+
+            const gameTick = useCallback(() => {
+                setCrickets(prevCrickets => {
+                    let newCrickets = [...prevCrickets];
+                    let foodRemaining = [...food];
+                    let bornThisTick = 0;
+
+                    // 1. Move and Eat
+                    newCrickets = newCrickets.map(c => {
+                        // Move randomly
+                        let nx = c.x + (Math.random() > 0.5 ? 1 : -1);
+                        let ny = c.y + (Math.random() > 0.5 ? 1 : -1);
+                        
+                        // Keep in bounds
+                        nx = Math.max(0, Math.min(GRID_SIZE - 1, nx));
+                        ny = Math.max(0, Math.min(GRID_SIZE - 1, ny));
+
+                        // Check for food
+                        const foodIndex = foodRemaining.findIndex(f => f.x === nx && f.y === ny);
+                        let hunger = c.hunger + 1;
+                        if (foodIndex !== -1) {
+                            hunger = 0; // Reset hunger
+                            foodRemaining.splice(foodIndex, 1);
+                        }
+
+                        return { ...c, x: nx, y: ny, hunger, age: c.age + 1 };
+                    });
+
+                    setFood(foodRemaining);
+
+                    // 2. Filter out the dead (Forgiving starvation)
+                    const survivors = newCrickets.filter(c => c.hunger < STARVATION_THRESHOLD);
+                    const deathCount = newCrickets.length - survivors.length;
+                    
+                    // 3. Automatic Breeding
+                    // If population > 2 and we haven't hit the performance cap, breed randomly
+                    if (survivors.length >= 2 && survivors.length < MAX_CRICKETS && Math.random() < 0.1) {
+                        const babyBatch = Array.from({ length: BREED_COUNT }).map((_, i) => ({
+                            id: Math.random() + Date.now() + i,
+                            x: Math.floor(Math.random() * GRID_SIZE),
+                            y: Math.floor(Math.random() * GRID_SIZE),
+                            hunger: 0,
+                            age: 0
+                        }));
+                        survivors.push(...babyBatch);
+                        bornThisTick = BREED_COUNT;
+                        setMessage(`Explosion! +25 Crickets!`);
+                        setTimeout(() => setMessage(""), 2000);
+                    }
+
+                    // Update global stats
+                    setStats(prev => ({
+                        totalBorn: prev.totalBorn + bornThisTick,
+                        deaths: prev.deaths + deathCount,
+                        highestPop: Math.max(prev.highestPop, survivors.length)
+                    }));
+
+                    return survivors;
+                });
+
+                spawnFood();
+            }, [food, spawnFood]);
+
+            useEffect(() => {
+                const interval = setInterval(gameTick, TICK_RATE);
+                return () => clearInterval(interval);
+            }, [gameTick]);
+
+            const handleManualAddFood = () => {
+                const manualFood = Array.from({ length: 5 }).map((_, i) => ({
+                    id: Date.now() + Math.random() + i,
+                    x: Math.floor(Math.random() * GRID_SIZE),
+                    y: Math.floor(Math.random() * GRID_SIZE)
+                }));
+                setFood(prev => [...prev, ...manualFood]);
+            };
+
+            const handleForceBreed = () => {
+                if (crickets.length >= MAX_CRICKETS) return;
+                const babyBatch = Array.from({ length: BREED_COUNT }).map((_, i) => ({
+                    id: Math.random() + Date.now() + i,
+                    x: Math.floor(Math.random() * GRID_SIZE),
+                    y: Math.floor(Math.random() * GRID_SIZE),
+                    hunger: 0,
+                    age: 0
+                }));
+                setCrickets(prev => [...prev, ...babyBatch]);
+                setStats(prev => ({ ...prev, totalBorn: prev.totalBorn + BREED_COUNT }));
+                setMessage("Manual Breeding Success!");
+                setTimeout(() => setMessage(""), 2000);
+            };
+
+            return (
+                <div className="flex flex-col h-screen text-white select-none">
+                    {/* Header */}
+                    <div className="p-4 bg-zinc-900 border-b border-zinc-800 flex justify-between items-center">
+                        <div>
+                            <h1 className="text-xl font-bold text-green-400 flex items-center gap-2">
+                                🦗 Cricket Rancher
+                            </h1>
+                            <p className="text-xs text-zinc-400">Breeding: +25 crickets automatically</p>
+                        </div>
+                        <div className="text-right">
+                            <div className="text-2xl font-mono leading-none">{crickets.length}</div>
+                            <div className="text-[10px] uppercase text-zinc-500 font-bold">Population</div>
+                        </div>
+                    </div>
+
+                    {/* Notification Bar */}
+                    <div className="h-8 bg-zinc-800 flex items-center justify-center text-sm font-medium">
+                        <span className={message ? "text-green-300 animate-pulse" : "text-zinc-600"}>
+                            {message || "Watching the colony..."}
+                        </span>
+                    </div>
+
+                    {/* Main Game Area */}
+                    <div className="flex-1 relative bg-grass overflow-hidden flex items-center justify-center p-2">
+                        <div 
+                            className="grid gap-0 bg-black/20 rounded-lg shadow-2xl border border-white/5"
+                            style={{ 
+                                gridTemplateColumns: `repeat(${GRID_SIZE}, 1fr)`,
+                                width: '100%',
+                                maxWidth: '500px'
+                            }}
+                        >
+                            {Array.from({ length: GRID_SIZE * GRID_SIZE }).map((_, i) => {
+                                const x = i % GRID_SIZE;
+                                const y = Math.floor(i / GRID_SIZE);
+                                const hasFood = food.some(f => f.x === x && f.y === y);
+                                const cellCrickets = crickets.filter(c => c.x === x && c.y === y);
+
+                                return (
+                                    <div key={i} className="grid-cell relative flex items-center justify-center">
+                                        {hasFood && (
+                                            <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(250,204,21,0.6)]" />
+                                        )}
+                                        {cellCrickets.length > 0 && (
+                                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                                {cellCrickets.slice(0, 3).map((c, idx) => (
+                                                    <span 
+                                                        key={c.id} 
+                                                        className={`text-lg cricket transition-all duration-300 transform
+                                                            ${idx === 1 ? 'translate-x-1' : idx === 2 ? '-translate-x-1' : ''}`}
+                                                        style={{ 
+                                                            fontSize: Math.max(12, 22 - cellCrickets.length) + 'px',
+                                                            filter: c.hunger > 3 ? 'grayscale(1)' : 'none'
+                                                        }}
+                                                    >
+                                                        🦗
+                                                    </span>
+                                                ))}
+                                                {cellCrickets.length > 3 && (
+                                                    <span className="text-[10px] bg-black/50 px-1 rounded absolute bottom-0 font-bold">
+                                                        +{cellCrickets.length - 3}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    {/* Stats Bar */}
+                    <div className="bg-zinc-900 grid grid-cols-3 gap-1 p-2 border-y border-zinc-800 text-center">
+                        <div className="bg-zinc-800/50 p-1 rounded">
+                            <div className="text-xs text-zinc-500 uppercase font-bold">Born</div>
+                            <div className="font-mono text-green-500">{stats.totalBorn}</div>
+                        </div>
+                        <div className="bg-zinc-800/50 p-1 rounded">
+                            <div className="text-xs text-zinc-500 uppercase font-bold">Peak</div>
+                            <div className="font-mono text-blue-400">{stats.highestPop}</div>
+                        </div>
+                        <div className="bg-zinc-800/50 p-1 rounded">
+                            <div className="text-xs text-zinc-500 uppercase font-bold">Losses</div>
+                            <div className="font-mono text-red-400">{stats.deaths}</div>
+                        </div>
+                    </div>
+
+                    {/* Controls */}
+                    <div className="p-4 pb-8 bg-zinc-950 flex gap-4">
+                        <button 
+                            onClick={handleManualAddFood}
+                            className="flex-1 bg-green-600 hover:bg-green-500 active:scale-95 transition-all py-4 rounded-xl font-bold flex flex-col items-center justify-center gap-1 shadow-lg shadow-green-900/20"
+                        >
+                            <span className="text-xl">🥗</span>
+                            <span>Drop Food</span>
+                        </button>
+                        <button 
+                            onClick={handleForceBreed}
+                            className="flex-1 bg-zinc-800 hover:bg-zinc-700 active:scale-95 transition-all py-4 rounded-xl font-bold flex flex-col items-center justify-center gap-1 border border-zinc-700"
+                        >
+                            <span className="text-xl">💖</span>
+                            <span>Manual Breed</span>
+                        </button>
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

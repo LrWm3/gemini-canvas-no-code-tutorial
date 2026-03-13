@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Building Websites with Gemini</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- React & ReactDOM (NO JSX) -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+    <style>
+        body {
+            background-color: #0f172a; /* Fallback */
+            color: #f8fafc;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.5);
+            border-radius: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(99, 102, 241, 0.8);
+        }
+
+        .slide-enter {
+            animation: slideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Disable text selection on buttons/controls */
+        .no-select {
+            user-select: none;
+            -webkit-user-select: none;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-gray-900 to-black min-h-screen font-sans antialiased overflow-hidden">
+    
+    <div id="root" class="h-screen w-full flex flex-col"></div>
+
+    <script>
+        const { createElement: e, useState, useEffect, useCallback } = React;
+
+        // --- Shared UI Components ---
+        
+        const Highlight = ({ children }) => e('span', { className: "text-indigo-400 font-semibold" }, children);
+        
+        const CodeBlock = ({ children }) => e('div', { 
+            className: "bg-gray-950 border border-gray-800 p-4 rounded-xl text-emerald-400 font-mono text-sm md:text-base my-3 overflow-x-auto shadow-inner w-full custom-scrollbar" 
+        }, e('code', { className: "whitespace-pre-wrap break-words" }, children));
+        
+        const List = ({ items }) => e('ul', { className: "list-none space-y-3 text-gray-300 w-full" },
+            items.map((item, i) => e('li', { key: i, className: "flex items-start" },
+                e('i', { className: "fa-solid fa-caret-right text-indigo-500 mt-1 mr-3 shrink-0" }),
+                e('span', { className: "leading-relaxed" }, item)
+            ))
+        );
+
+        const InfoCard = ({ title, children, type = "blue" }) => {
+            const colors = {
+                blue: "border-blue-500 bg-blue-900/20 text-blue-100",
+                purple: "border-purple-500 bg-purple-900/20 text-purple-100",
+                green: "border-green-500 bg-green-900/20 text-green-100",
+                red: "border-red-500 bg-red-900/20 text-red-100",
+                yellow: "border-yellow-500 bg-yellow-900/20 text-yellow-100"
+            };
+            return e('div', { className: `p-4 rounded-lg border-l-4 ${colors[type]} mb-4` },
+                e('h4', { className: "font-bold mb-1 flex items-center gap-2" }, title),
+                e('div', { className: "text-sm md:text-base opacity-90" }, children)
+            );
+        };
+
+        const StubWebsite = ({ badge, title, subtitle, accent = "indigo", cards = [], footer }) => {
+            const accents = {
+                indigo: "from-indigo-500 to-sky-400",
+                emerald: "from-emerald-500 to-teal-400",
+                orange: "from-orange-500 to-amber-400",
+                pink: "from-pink-500 to-rose-400",
+                violet: "from-violet-500 to-fuchsia-400",
+                cyan: "from-cyan-500 to-blue-400"
+            };
+
+            return e('div', { className: "h-full w-full rounded-[1.5rem] bg-slate-950 text-white border border-white/10 overflow-hidden shadow-2xl" },
+                e('div', { className: "px-4 py-3 border-b border-white/10 bg-slate-900 flex items-center gap-2" },
+                    e('span', { className: "w-3 h-3 rounded-full bg-rose-400" }),
+                    e('span', { className: "w-3 h-3 rounded-full bg-amber-300" }),
+                    e('span', { className: "w-3 h-3 rounded-full bg-emerald-400" }),
+                    e('div', { className: "ml-3 text-xs text-slate-400 truncate" }, "Preview")
+                ),
+                e('div', { className: "p-5 md:p-6 h-full bg-gradient-to-br from-slate-900 via-slate-950 to-black flex flex-col gap-4" },
+                    e('div', { className: `inline-flex self-start items-center rounded-full bg-gradient-to-r ${accents[accent]} px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-950` }, badge),
+                    e('div', null,
+                        e('h4', { className: "text-2xl font-bold leading-tight" }, title),
+                        e('p', { className: "mt-2 text-sm text-slate-300" }, subtitle)
+                    ),
+                    e('div', { className: "grid grid-cols-1 sm:grid-cols-2 gap-3" },
+                        cards.map((card, idx) =>
+                            e('div', { key: idx, className: "rounded-2xl border border-white/10 bg-white/5 p-4" },
+                                e('div', { className: "text-xs uppercase tracking-[0.2em] text-slate-400 mb-2" }, card.label),
+                                e('div', { className: "text-base font-semibold text-white" }, card.value)
+                            )
+                        )
+                    ),
+                    footer ? e('div', { className: "mt-auto rounded-2xl border border-dashed border-white/15 bg-white/5 p-4 text-sm text-slate-300" }, footer) : null
+                )
+            );
+        };
+
+        const ImageCarousel = ({ images, title, currentIndex = 0, onPrevious, onNext }) => {
+            const currentImage = images[currentIndex];
+
+            return e('div', { className: "rounded-[1.5rem] border border-white/10 bg-slate-950 p-3 shadow-2xl" },
+                e('div', { className: "flex items-center justify-between gap-3 px-2 pb-3" },
+                    e('div', null,
+                        e('div', { className: "text-xs uppercase tracking-[0.2em] text-slate-500" }, "Gallery Preview"),
+                        e('div', { className: "text-sm font-semibold text-white mt-1" }, title)
+                    ),
+                    e('div', { className: "text-xs text-slate-400" }, `${currentIndex + 1} / ${images.length}`)
+                ),
+                e('div', { className: "overflow-hidden rounded-[1rem] border border-white/10 bg-black" },
+                    e('img', {
+                        src: currentImage,
+                        alt: `${title} screenshot ${currentIndex + 1}`,
+                        className: "w-full h-[28rem] md:h-[36rem] object-contain bg-slate-950"
+                    })
+                ),
+                e('div', { className: "flex items-center justify-between gap-3 pt-3" },
+                    e('button', {
+                        onClick: onPrevious,
+                        className: "inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:bg-white/10"
+                    },
+                        e('i', { className: "fa-solid fa-arrow-left" }),
+                        "Previous"
+                    ),
+                    e('button', {
+                        onClick: onNext,
+                        className: "inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:bg-white/10"
+                    },
+                        "Next",
+                        e('i', { className: "fa-solid fa-arrow-right" })
+                    )
+                )
+            );
+        };
+
+        const ExampleModal = ({ isOpen, onClose, data, galleryIndex = 0, onGalleryPrevious, onGalleryNext }) => {
+            if (!isOpen || !data) return null;
+
+            return e('div', {
+                    className: "fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 backdrop-blur-md p-4"
+                },
+                e('div', {
+                        className: "absolute inset-0",
+                        onClick: onClose
+                    }),
+                e('div', {
+                        className: "relative w-full max-w-6xl max-h-[88vh] overflow-hidden rounded-3xl border border-white/10 bg-slate-900 shadow-2xl"
+                    },
+                    e('div', { className: "flex items-center justify-between border-b border-white/10 px-5 py-4 md:px-6" },
+                        e('div', null,
+                            e('div', { className: "text-xs uppercase tracking-[0.3em] text-indigo-300" }, "Demo Example"),
+                            e('h3', { className: "text-xl md:text-2xl font-semibold text-white mt-1" }, data.title || "Example")
+                        ),
+                        e('button', {
+                            onClick: onClose,
+                            className: "rounded-full border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-300 transition hover:bg-white/10 hover:text-white"
+                        }, "Close")
+                    ),
+                    e('div', { className: "flex flex-col md:flex-row max-h-[calc(88vh-88px)]" },
+                        e('div', { className: "md:w-[42%] border-b md:border-b-0 md:border-r border-white/10 bg-slate-950/70 p-4 md:p-6 overflow-y-auto custom-scrollbar" },
+                            e('div', { className: "text-xs uppercase tracking-[0.25em] text-slate-500 mb-4" }, "Prompt Flow"),
+                            e('div', { className: "space-y-3" },
+                                data.chat.map((message, idx) =>
+                                    e('div', {
+                                            key: idx,
+                                            className: `rounded-2xl px-4 py-3 text-sm leading-relaxed border ${
+                                                message.role === 'user'
+                                                    ? 'ml-6 border-indigo-400/20 bg-indigo-500/15 text-indigo-50'
+                                                    : 'mr-6 border-slate-700 bg-slate-800/90 text-slate-200'
+                                            }`
+                                        },
+                                        e('div', { className: "mb-1 text-[11px] uppercase tracking-[0.2em] opacity-70" },
+                                            message.role === 'user' ? 'User' : 'Gemini'
+                                        ),
+                                        e('div', null, message.text)
+                                    )
+                                )
+                            )
+                        ),
+                        e('div', { className: "flex-1 bg-gradient-to-br from-slate-900 via-slate-950 to-black p-4 md:p-6 overflow-y-auto custom-scrollbar" },
+                            e('div', { className: "text-xs uppercase tracking-[0.25em] text-slate-500 mb-4" }, "Website Preview"),
+                            e('div', { className: "mx-auto max-w-2xl" },
+                                data.galleryImages
+                                    ? e(ImageCarousel, {
+                                        title: data.galleryTitle || data.title || "Gallery",
+                                        images: data.galleryImages,
+                                        currentIndex: galleryIndex,
+                                        onPrevious: onGalleryPrevious,
+                                        onNext: onGalleryNext
+                                    })
+                                    : data.website()
+                            )
+                        )
+                    )
+                )
+            );
+        };
+
+        const PRESENTATION_STORAGE_KEY = 'gemini-tutorial-state';
+
+        const readSavedPresentationState = () => {
+            try {
+                const raw = window.localStorage.getItem(PRESENTATION_STORAGE_KEY);
+                if (!raw) return {};
+                return JSON.parse(raw) || {};
+            } catch (error) {
+                return {};
+            }
+        };
+
+        // --- Slide Content Definitions ---
+        
+        const slidesData = [
+            {
+                title: "Creating Websites with Gemini",
+                content: () => e('div', { className: "text-center space-y-8 flex flex-col items-center justify-center h-full py-10" },
+                    e('div', { className: "w-24 h-24 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/30 mb-4" },
+                        e('i', { className: "fa-solid fa-sparkles text-4xl text-white" })
+                    ),
+                    e('p', { className: "text-xl md:text-2xl text-gray-300 max-w-2xl font-light leading-relaxed" }, 
+                        "A guided tutorial on leveraging Gemini for rapid web development."
+                    ),
+                    e('p', { className: "text-sm text-gray-500 uppercase tracking-widest mt-8 animate-pulse" }, 
+                        "Use arrows or swipe to begin"
+                    )
+                )
+            },
+            {
+                title: "What This Presentation Covers",
+                content: () => e(List, { items: [
+                    "Key Prompts & System Settings",
+                    "Turning a LinkedIn PDF into a Website",
+                    "Pro Tips: Workflow & Managing Degradation",
+                    "Having Fun with Stylized Prompts",
+                    "Preparing and Hosting on Cloudflare",
+                    "Game Creation workflows (2D & 3D)",
+                    "Generating Meta Tools & Apps",
+                    "Solving Frequent AI Issues",
+                    "Adding Images correctly"
+                ]})
+            },
+            {
+                title: "Key Prompts & Settings",
+                content: () => e('div', { className: "space-y-4 w-full" },
+                    e('p', { className: "text-gray-300 text-lg mb-6" }, 
+                        "Use ", e(Highlight, null, "'Thinking'"), " or ", e(Highlight, null, "'Pro'"), " mode with ", e(Highlight, null, "Canvas turned on"), " for Gemini."
+                    ),
+                    e('h3', { className: "text-lg text-white font-semibold flex items-center gap-2" }, 
+                        e('i', { className: "fa-solid fa-key text-indigo-400" }), "Primary Key Prompt:"
+                    ),
+                    e(CodeBlock, null, "In html + css + js + tailwind + fontawesome, and NO JSX, create me a mobile and desktop friendly website"),
+                    e('h3', { className: "text-lg text-white font-semibold mt-6 flex items-center gap-2" }, 
+                        e('i', { className: "fa-brands fa-react text-blue-400" }), "Secondary Key Prompt (React):"
+                    ),
+                    e(CodeBlock, null, "In html + css + js + tailwind + fontawesome + inline html react (cdn import [NO JSX]), create me a mobile and desktop friendly website")
+                )
+            },
+            {
+                title: "LinkedIn to Personal Website",
+                example: {
+                    title: "LinkedIn Resume Site Demo",
+                    chat: [
+                        { role: 'user', text: "In html + css + js + tailwind + inline html react (cdn import), make me a personal blog based on this PDF. do NOT use JSX." },
+                        { role: 'assistant', text: "I will create a sophisticated, single-file React application for your personal blog and portfolio. Since you requested no JSX, I will use React.createElement for all component rendering." },
+                        { role: 'assistant', text: "The site is designed with a \"Mars\" accent palette (deep oranges and grays) to reflect your professional identity and architectural background. It features a responsive layout, an interactive experience timeline based on your PDF, and a technical blog section." },
+                        { role: 'assistant', text: "Key Features of the Blog:\n\nReact (No JSX): Built entirely using React.createElement to satisfy your constraint, allowing it to run directly via CDN without a build step.\n\nTailwind CSS: Uses a refined Slate and Orange color scheme (The \"Mars\" theme).\n\nContent-Rich: I extracted your specific responsibilities from the PDF, such as the NATO TRITON project, ReelData AI leadership, and MDA radar processing, to populate the experience section.\n\nResponsive Design: The navigation and grid systems adapt seamlessly from mobile to desktop.\n\nInteractive States: Includes a functional \"View\" state to switch between your portfolio home and a technical blog feed.\n\nLucide Icons: Integrated for a professional, crisp visual identity.\n\nYou can simply open this .html file in any browser to see the live, interactive version." }
+                    ],
+                    website: () => e('div', { className: "rounded-[1.5rem] border border-white/10 bg-slate-950 p-3 shadow-2xl" },
+                        e('iframe', {
+                            src: "resume1.html",
+                            title: "LinkedIn Resume Site Demo",
+                            className: "w-full h-[28rem] md:h-[36rem] rounded-[1rem] bg-white",
+                            loading: "lazy"
+                        })
+                    )
+                },
+                content: () => e('div', { className: "space-y-6 w-full" },
+                    e('div', { className: "flex items-start gap-4" },
+                        e('div', { className: "bg-indigo-600 text-white rounded-full w-8 h-8 flex items-center justify-center shrink-0 font-bold" }, "1"),
+                        e('p', { className: "text-gray-300 text-lg pt-1" }, "Download a PDF export of your LinkedIn profile.")
+                    ),
+                    e('div', { className: "flex items-start gap-4" },
+                        e('div', { className: "bg-indigo-600 text-white rounded-full w-8 h-8 flex items-center justify-center shrink-0 font-bold" }, "2"),
+                        e('div', { className: "w-full" },
+                            e('p', { className: "text-gray-300 text-lg pt-1 mb-2" }, "Upload it and use this prompt:"),
+                            e(CodeBlock, null, "In html + css + js + tailwind + inline html react (cdn import [NO JSX]), convert this Linkedin export into a website")
+                        )
+                    ),
+                    e('div', { className: "flex items-start gap-4" },
+                        e('div', { className: "bg-indigo-600 text-white rounded-full w-8 h-8 flex items-center justify-center shrink-0 font-bold" }, "3"),
+                        e('p', { className: "text-gray-300 text-lg pt-1" }, "View your newly generated interactive blog/resume right in the Canvas sidebar.")
+                    )
+                )
+            },
+            {
+                title: "Create a Business Website",
+                example: {
+                    title: "Business Website Redesign Demo",
+                    chat: [
+                        { role: 'user', text: "go to https://www.reeldata.ai/ and get information that would be needed to to a redesign of this website." },
+                        { role: 'assistant', text: "To redesign the ReelData AI website, you need a comprehensive understanding of their current brand, technical offerings, and business goals. Below is the essential information gathered from the live site and recent company data.\n\n... omitting details ..." },
+                        { role: 'user', text: "In html + css + js + tailwind + inline html react (cdn import, [NO JSX]), create me a new ReelData AI website. Where media content is required (img / video / etc), simply stub or design around for now." },
+                        { role: 'assistant', text: "I will generate a fresh, high-end redesign of the ReelData AI website directly within Canvas, focusing on a sophisticated \"Dark Mode\" aesthetic that highlights their AI capabilities and the unique underwater nature of their business.\n\n... continued ..." }
+                    ],
+                    website: () => e('div', { className: "rounded-[1.5rem] border border-white/10 bg-slate-950 p-3 shadow-2xl" },
+                        e('iframe', {
+                            src: "business.html",
+                            title: "Business Website Redesign Demo",
+                            className: "w-full h-[28rem] md:h-[36rem] rounded-[1rem] bg-white",
+                            loading: "lazy"
+                        })
+                    )
+                },
+                content: () => e('div', { className: "space-y-6 w-full" },
+                    e('div', { className: "flex items-start gap-4" },
+                        e('div', { className: "bg-indigo-600 text-white rounded-full w-8 h-8 flex items-center justify-center shrink-0 font-bold" }, "1"),
+                        e('p', { className: "text-gray-300 text-lg pt-1" }, "Either export your business information from Facebook and LinkedIn and attach it to Gemini, or point Gemini at your existing business website and ask it to extract the information needed for a redesign, stubbing media for now.")
+                    ),
+                    e('div', { className: "flex items-start gap-4" },
+                        e('div', { className: "bg-indigo-600 text-white rounded-full w-8 h-8 flex items-center justify-center shrink-0 font-bold" }, "2"),
+                        e('p', { className: "text-gray-300 text-lg pt-1" }, "In the second prompt, turn on Canvas and ask it to make a new version of the site for you.")
+                    )
+                )
+            },
+            {
+                title: "Pro Tips for Workflow",
+                content: () => e('div', { className: "space-y-2 w-full pr-2" },
+                    e(InfoCard, { title: "Tip 1: Version Travel", type: "blue" }, "The Canvas has arrows at the top to go back to earlier versions of your website if you don't like an edit."),
+                    e(InfoCard, { title: "Tip 2: Regenerate vs. Continue", type: "purple" }, "Full regeneration changes visuals wildly. As threads get longer, coding ability degrades. Prefer to edit your original message and regenerate instead of constantly requesting small tweaks post-generation."),
+                    e(InfoCard, { title: "Tip 3: Escaping Degradation", type: "red" }, "You cannot edit >1 message back. If the model degrades, copy your entire current website code, paste it into a NEW chat, and request changes from there.")
+                )
+            },
+            {
+                title: "Gemini Canvas Sharing",
+                content: () => e('div', { className: "space-y-6 w-full" },
+                    e('p', { className: "text-lg text-gray-300 border-b border-gray-700 pb-4" }, "The fastest way to share directly from Gemini:"),
+                    e(List, { items: [
+                        e('span', null, "In the Gemini Canvas top-right corner, click ", e('strong', { className: "text-white" }, "Share > Share"), "."),
+                        e('span', null, "Click ", e('strong', { className: "text-white" }, "Copy Link"), "."),
+                        "Send that link to others and they can view the page inside a Gemini frame."
+                    ]}),
+                    e(InfoCard, { title: "Note", type: "yellow" }, "Share via link is not available on Business accounts.")
+                )
+            },
+            {
+                title: "Cloudflare Sharing (Part 1)",
+                content: () => e('div', { className: "space-y-6 w-full" },
+                    e('p', { className: "text-lg text-gray-300 border-b border-gray-700 pb-4" }, "Prepare your Canvas site to be hosted globally for free:"),
+                    e(InfoCard, { title: "Why?", type: "blue" }, "Allows your page to appear like a standard site rather than a Gemini App."),
+                    e(List, { items: [
+                        e('span', null, "In Gemini Canvas, click ", e('strong', { className: "text-white" }, "Share > Copy to Clipboard"), "."),
+                        "Open Notepad or any plain text editor.",
+                        e('span', null, "Create a folder called ", e('code', { className: "bg-gray-800 px-2 py-1 rounded text-emerald-400 font-mono" }, "site"), " on your computer."),
+                        "Paste the contents into the editor.",
+                        e('span', null, "Save the file exactly as ", e('code', { className: "bg-gray-800 px-2 py-1 rounded text-emerald-400 font-mono" }, "index.html"), " inside your ", e('code', { className: "bg-gray-800 px-2 py-1 rounded text-emerald-400 font-mono" }, "site"), " folder.")
+                    ]})
+                )
+            },
+            {
+                title: "Cloudflare Sharing (Part 2)",
+                content: () => e('div', { className: "space-y-6 w-full" },
+                    e('p', { className: "text-lg text-gray-300 border-b border-gray-700 pb-4" }, "Publishing your file to the web:"),
+                    e(List, { items: [
+                        e('span', null, "Login to ", e('strong', { className: "text-white text-orange-400" }, "Cloudflare"), "."),
+                        e('span', null, "Navigate to ", e('strong', { className: "text-white" }, "Workers & Pages"), " > ", e('strong', { className: "text-white" }, "Create application"), "."),
+                        e('span', null, "Click ", e('strong', { className: "text-white" }, "\"Looking to deploy Pages? Get started\""), "."),
+                        e('span', null, "Select ", e('strong', { className: "text-white" }, "Drag and drop your files"), "."),
+                        e('span', null, "Enter your project name. This will influence the DNS name you get (for example, ", e('code', { className: "bg-gray-800 px-2 py-1 rounded text-emerald-400 font-mono" }, "<project-name>.pages.dev"), ")."),
+                        e('span', null, "Drag your ", e('code', { className: "bg-gray-800 px-2 py-1 rounded text-emerald-400 font-mono" }, "site"), " folder into the upload area."),
+                        e('span', null, "Click ", e('strong', { className: "text-white" }, "Deploy"), " and view your live site!")
+                    ]})
+                )
+            },
+            {
+                title: "Have Fun With It!",
+                example: {
+                    title: "Classic Mode Demo",
+                    chat: [
+                        { role: 'user', text: ".. continuing from last chat ..\n\nput a toggle button called 'classic mode' that themes everything like windows 95" },
+                        { role: 'assistant', text: "Gemini said\n\nI've updated your portfolio to include a \"Classic Mode\" toggle. When activated, it transforms the modern design into a nostalgic Windows 95 interface, complete with the iconic teal background, beveled gray windows, and pixel-accurate borders. (.. continued ..)" }
+                    ],
+                    website: () => e('div', { className: "rounded-[1.5rem] border border-white/10 bg-slate-950 p-3 shadow-2xl" },
+                        e('iframe', {
+                            src: "resume2.html",
+                            title: "Classic Mode Demo",
+                            className: "w-full h-[28rem] md:h-[36rem] rounded-[1rem] bg-white",
+                            loading: "lazy"
+                        })
+                    )
+                },
+                content: () => e('div', { className: "space-y-6 w-full" },
+                    e('p', { className: "text-lg text-gray-300" }, "You can prompt for wild, creative interactions directly in the same page. Try adding this to your base prompt:"),
+                    e(CodeBlock, null, "put a toggle button called 'classic mode' that themes everything like windows 95")
+                )
+            },
+            {
+                title: "Updating an Existing Cloudflare Site",
+                content: () => e('div', { className: "space-y-6 w-full" },
+                    e('p', { className: "text-lg text-gray-300 border-b border-gray-700 pb-4" }, "Replacing your current Pages deployment with a new version:"),
+                    e(List, { items: [
+                        e('span', null, "Make your edits in Gemini Canvas, then copy the updated code back into ", e('code', { className: "bg-gray-800 px-2 py-1 rounded text-emerald-400 font-mono" }, "index.html"), " inside your ", e('code', { className: "bg-gray-800 px-2 py-1 rounded text-emerald-400 font-mono" }, "site"), " folder."),
+                        e('span', null, "In ", e('strong', { className: "text-white text-orange-400" }, "Cloudflare"), ", open ", e('strong', { className: "text-white" }, "Workers & Pages"), " and click your existing project."),
+                        e('span', null, "Open the ", e('strong', { className: "text-white" }, "Deployments"), " tab, then click ", e('strong', { className: "text-white" }, "Create new deployment"), "."),
+                        e('span', null, "Drag and drop your updated ", e('code', { className: "bg-gray-800 px-2 py-1 rounded text-emerald-400 font-mono" }, "site"), " folder."),
+                        e('span', null, "Click ", e('strong', { className: "text-white" }, "Deploy"), " to replace the live version with the new one.")
+                    ]})
+                )
+            },
+            {
+                title: "Game Creation",
+                example: {
+                    title: "Cricket Breeder Demo",
+                    chat: [
+                        { role: 'user', text: "In html + css + js + tailwind + inline html react in the html, create a mobile friendly game where we breed crickets with a 2d grid as the main view. have it involve breeding a lot of them, and have them breed automatically. when breeding it should create another 25 crickets and make starvation forgiving." },
+                        { role: 'assistant', text: "I've designed a mobile-friendly cricket breeding simulator called Cricket Rancher. It features a 2D grid where your crickets roam, eat, and multiply rapidly.\n\n(.. continued ..)" }
+                    ],
+                    website: () => e('div', { className: "rounded-[1.5rem] border border-white/10 bg-slate-950 p-3 shadow-2xl" },
+                        e('iframe', {
+                            src: "game.html",
+                            title: "Cricket Breeder Demo",
+                            className: "w-full h-[28rem] md:h-[36rem] rounded-[1rem] bg-white",
+                            loading: "lazy"
+                        })
+                    )
+                },
+                content: () => e('div', { className: "space-y-6 w-full" },
+                    e('p', { className: "text-gray-300 text-lg" }, "First, decide if your game is 2D or 3D. For 2D games, rely on standard HTML canvas or DOM elements."),
+                    e('h3', { className: "text-lg text-white font-semibold" }, "2D Game Prompt structure:"),
+                    e(CodeBlock, null, "In html + css + js + tailwind + fontawesome + inline html react (cdn import [NO JSX]), <prompt>, use emojis or font awesome as needed for the art, and use localstorage to save and load data between page refreshes")
+                )
+            },
+            {
+                title: "3D Effect Generation",
+                examples: [
+                    {
+                        title: "Resume 3D Demo",
+                        buttonLabel: "View Resume Demo",
+                        chat: [
+                            { role: 'user', text: "add Three.js and add lots of cool 3 things with shaders and stuff to make the blog seem like really fancy and cool, way beyond what is needed" },
+                            { role: 'assistant', text: "I will now generate an enhanced version of your portfolio. This version includes a high-performance Three.js engine that powers a celestial background with custom GLSL shaders, creating a \"Mars-like\" atmospheric planet and a dynamic starfield. (.. continued ..)" }
+                        ],
+                        website: () => e('div', { className: "rounded-[1.5rem] border border-white/10 bg-slate-950 p-3 shadow-2xl" },
+                            e('iframe', {
+                                src: "resume3.html",
+                                title: "Resume 3D Demo",
+                                className: "w-full h-[28rem] md:h-[36rem] rounded-[1rem] bg-white",
+                                loading: "lazy"
+                            })
+                        )
+                    },
+                    {
+                        title: "3D Dolphin Game Demo",
+                        buttonLabel: "View 3D Game Demo",
+                        chat: [
+                            { role: 'user', text: "In html + css + js + tailwind + Three.js + fontawesome, and NO JSX, create me a mobile and desktop friendly website game where i am a dolphin and i can swim around the water and if i swim out of the surface of the water its like a jump, and i can eat the small fishes to get bigger and faster, and must avoid the big fishes. have it be a 3d environment and have some kind of mobile controls system." },
+                            { role: 'assistant', text: "Gemini said\n\nI've designed a fully functional, 3D underwater survival game where you play as a dolphin. (.. continued ..)" }
+                        ],
+                        website: () => e('div', { className: "rounded-[1.5rem] border border-white/10 bg-slate-950 p-3 shadow-2xl" },
+                            e('iframe', {
+                                src: "3dgame.html",
+                                title: "3D Dolphin Game Demo",
+                                className: "w-full h-[28rem] md:h-[36rem] rounded-[1rem] bg-white",
+                                loading: "lazy"
+                            })
+                        )
+                    }
+                ],
+                content: () => e('div', { className: "space-y-6 w-full" },
+                    e('p', { className: "text-gray-300 text-lg" }, "Gemini is highly capable of leveraging libraries like Three.js for 3D interactions."),
+                    e('h3', { className: "text-lg text-white font-semibold" }, "3D Prompt structure:"),
+                    e(CodeBlock, null, "In html + css + js + tailwind + Three.js, <prompt>"),
+                    e(InfoCard, { title: "Creative Example", type: "purple" }, "Try regenerating your LinkedIn resume using this prompt to create a stunning, interactive 3D portfolio.")
+                )
+            },
+            {
+                title: "Meta Tool Generation",
+                examples: [
+                    {
+                        title: "Reddit Thread Simulator Demo",
+                        buttonLabel: "View Reddit Demo",
+                        chat: [
+                            { role: 'user', text: "In html + css + js + tailwind + Three.js + fontawesome, and NO JSX, create me a mobile and desktop friendly website called reddit thread simulator. when it first loads it loads to /r/all, which uses gemini AI to populate. we can create a new topic or click an existing one. if we click an existing topic it ai generates user account names and reddit replies. if we create a new one we specify the subreddit and the title and the content and it generates the replies. we can also comment from inside a thread and it will generate a replies to our reply.\n\nstyle the entire thing like old.reddit.com and have robust error handling and cache thread contents so we dont need to regenerate it if we revisit the same thread" },
+                            { role: 'assistant', text: "I will build a complete, single-file web application that simulates the classic old.reddit.com experience using HTML, CSS (Tailwind), JavaScript, Three.js (for a 3D animated upvote arrow logo), and FontAwesome. (.. continued ..)" },
+                            { role: 'user', text: "This is great. allow navigating to other subreddits as well, (generating the list of threads when we do as appropriate) and for <img> style threads, when we enter them, generate an appropriate image as well for the thread" },
+                            { role: 'assistant', text: "I've added full support for dynamic subreddit navigation and AI image generation. (.. continued ..)" },
+                            { role: 'user', text: "Allow clicking on a user to have their comments and posts generated, and if we post a thread to a subreddit we haven't visted, generate the other threads for that subreddit. and allow clicking somewhere to enter what subreddit we want to visit\n\nalso, when we make a thread or a comment, ensure our upvotes are generated as well, defaulting to 1 but updated along with the replies / comments being generated\n\nbut preserve all existing functionality as it is working well" },
+                            { role: 'assistant', text: "I have implemented the requested features while preserving all existing functionality. (.. continued ..)" },
+                            { role: 'user', text: "When replying to a comment, include the content of the comment being replied to in the prompt. also, have the person you are replying to be one of the replies if it isnt a reply to your own comment\n\notherwise maintain all existing functionality and features" },
+                            { role: 'assistant', text: "I have updated the interaction logic to include the exact context of the comment you are replying to." }
+                        ],
+                        galleryTitle: "reddit thread simulator",
+                        galleryImages: [
+                            "meta/reddit/1.png",
+                            "meta/reddit/2.png",
+                            "meta/reddit/3.png",
+                            "meta/reddit/4.png",
+                            "meta/reddit/5.png",
+                            "meta/reddit/6.png",
+                            "meta/reddit/7.png",
+                            "meta/reddit/8.png",
+                            "meta/reddit/9.png"
+                        ]
+                    },
+                    {
+                        title: "Project Planner Demo",
+                        buttonLabel: "View Project Planner Demo",
+                        chat: [
+                            { role: 'user', text: "In html + css + js + tailwind + inline html react (cdn import [NO JSX]), Create a project planning tool. project plans will be made up of initiatives < epics < storys < tasks < subtasks. all of these have a description, status, priority, and acceptance criteria. I should be able to describe an initiative, and it will generate the epic titles for underneath it. if i think any are missing, i can prompt have epics reworked or more added, clicking an epic then generates the epic details, showing the underlying stories. i can similarly prompt to regenerate these stories, clicking the story is the same, it generates the underlying tasks, clicking the task is the same, generates the underlying subtasks. I should be able to edit any of this. cache everything post generation so we do not need to regenerate when navigating around. include a prompt box for generation. when generating, include upstream and sibling context to ensure project plan is well-done. for generated initiatives, keep them in a list, we can click on to see the details in the main viewing area. queue requests so we can send multiple at once and show time we have been waiting for a request to resolve, and have robust error handling so a failing request doesn't break the site. when viewing any item, have a 'regenerate' button. Add a 'Save to file' and 'import from file' feature to allow saving and loading progress." },
+                            { role: 'assistant', text: "I'll build a comprehensive, single-file Project Planning Tool using HTML, Tailwind CSS, JavaScript, and React via htm (Hyperscript Tagged Markup) to satisfy your \"no JSX\" requirement while keeping the component structure clean and manageable." },
+                            { role: 'user', text: "on the initiative sidebar allow expanding and collapsing the tree; which is made up of epics, storys, tasks, subtasks, where each can be expanded or collapsed. also, when generating something that can have descendants such as an initiative, epic, story or task, have it automatically also generate descendants with the default prompt inserted as an argument: 'generate all reasonable assuming no existing foundation'" },
+                            { role: 'assistant', text: "I've implemented both of your requested features." }
+                        ],
+                        galleryTitle: "project planner",
+                        galleryImages: [
+                            "meta/project-planner/1.png",
+                            "meta/project-planner/2.png",
+                            "meta/project-planner/3.png"
+                        ]
+                    },
+                    {
+                        title: "Lesson Plan Demo",
+                        buttonLabel: "View Lesson Plan Demo",
+                        chat: [
+                            { role: 'user', text: "In html + css + js + tailwind + inline html react (cdn import [NO JSX]), Create a lesson plan generator. I should be able to describe a course, and it will generate a course title, description, syllabus, with lecture content covered each week over the 16 week semester, I should be able to edit any of this. drilling down into the lecture content by week should then generate a detailed lesson plan for what we would be covering that class, including relevant assignments or readings. again allow editing. drilling into the assignments should then generate the assignments. cache everything post generation so we do not need to regenerate when navigating around. include a prompt box for generation. when generating, include upstream and sibling context to ensure course is well designed. for generated items, keep them in a list, we can click on to see the details in the main viewing area. queue requests so we can send multiple at once and show time we have been waiting for a request to resolve, and have robust error handling so a failing request doesn't break the site. Add a 'Save to file' and 'import from file' feature to allow saving and loading progress." },
+                            { role: 'assistant', text: "I will build a single-file lesson plan generator with a structured course outline, weekly drill-down views, editable generated content, caching, queue-based generation, and save/import support. (.. continued ..)" }
+                        ],
+                        galleryTitle: "lesson plan generator",
+                        galleryImages: [
+                            "meta/lesson-plan/1.png",
+                            "meta/lesson-plan/2.png",
+                            "meta/lesson-plan/3.png",
+                            "meta/lesson-plan/4.png",
+                            "meta/lesson-plan/5.png"
+                        ]
+                    }
+                ],
+                content: () => e('div', { className: "space-y-4 w-full" },
+                    e('p', { className: "text-gray-300" }, "Build complex tools (Note: These often aren't directly Cloudflare compatible without backend setup, but are amazing for local Canvas use)."),
+                    e('p', { className: "text-white font-semibold mt-4" }, "Examples:"),
+                    e(List, { items: [
+                        "A persona & business idea generator. Select multiple to merge and generate a combined concept.",
+                        "A Storybook-style component library (Ensure you tell it to reject JSX and only create functional inline components).",
+                        "A lesson-plan builder that generates modules, quizzes, and a teacher dashboard for reviewing outputs."
+                    ]}),
+                    e('details', { className: "bg-gray-950 border border-gray-800 rounded-xl overflow-hidden" },
+                        e('summary', { className: "cursor-pointer list-none no-select px-4 py-3 text-white font-semibold bg-gray-900/80 border-b border-gray-800" }, "Show reusable meta-tool prompt"),
+                        e('div', { className: "p-4" },
+                            e(CodeBlock, null, "In html + css + js + tailwind + inline html react (cdn import [NO JSX]), <prompt>, and include a prompt box to generate them. for generated items, keep them in a list, we can click on to see the details in the main viewing area. queue requests so we can send multiple at once and show time we have been waiting for a request to resolve, and have robust error handling so a failing request doesn't break the site. Add a 'Save to file' and 'import from file' feature to allow saving and loading progress.")
+                        )
+                    )
+                )
+            },
+            {
+                title: "Frequent Issues",
+                content: () => e('div', { className: "space-y-4 w-full" },
+                    e(InfoCard, { title: "Issue 1: Fails to make changes after many prompts", type: "red" }, 
+                        e('div', null, 
+                            e('span', { className: "font-bold text-red-300 block mb-1" }, "Solution:"),
+                            "You have hit the context limit of the technology. Copy and paste the entire last working version into a new Gemini chat and continue, or just retire the thread."
+                        )
+                    ),
+                    e(InfoCard, { title: "Issue 2: Scrolling / Visibility Issues", type: "yellow" }, 
+                        e('div', null,
+                            e('span', { className: "font-bold text-yellow-300 block mb-1" }, "Solution:"),
+                            "These are very common with AI-generated layouts. Simply edit your prompt and ask Gemini specifically to fix the scrolling issue."
+                        )
+                    )
+                )
+            },
+            {
+                title: "Advanced Behavior",
+                content: () => e('div', { className: "text-center space-y-8 flex flex-col items-center justify-center h-full py-10" },
+                    e('div', { className: "w-24 h-24 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/30 mb-4" },
+                        e('i', { className: "fa-solid fa-gears text-4xl text-white" })
+                    ),
+                    e('p', { className: "text-xl md:text-2xl text-gray-300 max-w-2xl font-light leading-relaxed" },
+                        "Persistence, deployment limits, and where this workflow stops being enough."
+                    )
+                )
+            },
+            {
+                title: "Adding Images",
+                example: {
+                    title: "Local Images Demo",
+                    chat: [
+                        { role: 'user', text: "Use my local files crab1.png and crab2.png in the site hero and gallery." },
+                        { role: 'assistant', text: "I’ll reference them with relative URLs so they work after you save everything in a site folder." },
+                        { role: 'user', text: "Make sure the upload flow still works on Cloudflare Pages." }
+                    ],
+                    website: () => e(StubWebsite, {
+                        badge: "Assets",
+                        title: "Crab Gallery",
+                        subtitle: "A local-image-aware site structure with hero art, gallery slots, and deploy-ready paths.",
+                        accent: "cyan",
+                        cards: [
+                            { label: "Hero Image", value: "crab1.png" },
+                            { label: "Gallery", value: "crab2.png + future assets" },
+                            { label: "Path Style", value: "Relative URLs" },
+                            { label: "Deploy Shape", value: "site/index.html + images/" }
+                        ],
+                        footer: "This preview is intentionally static; the real implementation can later load actual local image assets."
+                    })
+                },
+                content: () => e('div', { className: "space-y-4 w-full" },
+                    e('p', { className: "text-gray-300" }, "Cloudflare supports images, but it requires a slight workflow change from pure Canvas development."),
+                    e(List, { items: [
+                        e('span', null, "First, create a folder called ", e('code', { className: "bg-gray-800 px-1 rounded text-emerald-400" }, "site"), " on your computer."),
+                        "Put your images in this folder.",
+                        e('span', null, "In your prompt, provide the exact image names (e.g. ", e('code', { className: "bg-gray-800 px-1 rounded text-emerald-400" }, "crab1.png"), ", ", e('code', { className: "bg-gray-800 px-1 rounded text-emerald-400" }, "crab2.png"), ")."),
+                        e('span', null, "Ask Gemini to use ", e('strong', { className: "text-white" }, "relative urls"), " when displaying them."),
+                        e('span', null, "Save the page as ", e('strong', { className: "text-white" }, "index.html"), " in your ", e('strong', { className: "text-white" }, "site"), " folder and then drag and drop ", e('strong', { className: "text-white" }, "the entire folder"), " into Cloudflare.")
+                    ]}),
+                    e(InfoCard, { title: "Warning", type: "yellow" }, "The website will NOT look correct in Canvas (images will be broken). However, if you save it as index.html locally, or upload the entire 'site' folder to Cloudflare, the images will work perfectly.")
+                )
+            },
+            {
+                title: "Adding Favicon",
+                content: () => e('div', { className: "space-y-4 w-full" },
+                    e('p', { className: "text-gray-300 text-lg" }, "A favicon is the small icon shown in the browser tab. It helps your site feel finished and makes it easier to spot among many open tabs."),
+                    e(List, { items: [
+                        e('span', null, "Put your favicon file in the ", e('code', { className: "bg-gray-800 px-1 rounded text-emerald-400" }, "site"), " folder. Common names are ", e('code', { className: "bg-gray-800 px-1 rounded text-emerald-400" }, "favicon.ico"), " or ", e('code', { className: "bg-gray-800 px-1 rounded text-emerald-400" }, "favicon.png"), "."),
+                        e('span', null, "Ask Gemini to add a favicon link in the page ", e('code', { className: "bg-gray-800 px-1 rounded text-emerald-400" }, "<head>"), " that points to that file."),
+                        e('span', null, "If needed, tell Gemini the exact file name so it uses the right path."),
+                        "When you upload the full site folder to Cloudflare, the favicon file will go with it."
+                    ]}),
+                    e(InfoCard, { title: "Simple Prompt Add-On", type: "green" },
+                        e(CodeBlock, null, "Also add a favicon using favicon.png from the same site folder.")
+                    )
+                )
+            },
+            {
+                title: "Persisting Data",
+                content: () => e('div', { className: "space-y-4 w-full" },
+                    e('p', { className: "text-gray-300 text-lg" }, "If you want saving features, ask for the storage approach explicitly in your prompt. Gemini tends to prefer Firestore by default, which creates problems once you leave Canvas."),
+                    e(InfoCard, { title: "Option 1: Firestore in Canvas", type: "yellow" },
+                        e(List, { items: [
+                            "This is the default Gemini usually prefers.",
+                            "It works when shared through Gemini Canvas.",
+                            "It does not work once you move the site to Cloudflare without additional programming.",
+                            "Ask for a public collection for shared data, or a private collection for per-user data."
+                        ]})
+                    ),
+                    e(InfoCard, { title: "Option 2: Local Storage", type: "green" },
+                        e(List, { items: [
+                            "Works on your device.",
+                            "Works on Cloudflare.",
+                            "Persists across refreshes.",
+                            "Does not work from inside the Canvas view.",
+                            "Best default choice for sites you plan to put on Cloudflare."
+                        ]})
+                    ),
+                    e(InfoCard, { title: "Option 3: Save Files or Clipboard", type: "blue" },
+                        e(List, { items: [
+                            "Download save file / Upload save file works everywhere, is manual, and is the most reliable option.",
+                            "Export to clipboard / Import from clipboard is very similar, works everywhere, and is faster for quick saves and loads.",
+                            "Clipboard is less durable because you did not save a file to disk.",
+                            "Both approaches can be combined with Local Storage or Firestore."
+                        ]})
+                    )
+                )
+            },
+            {
+                title: "Adding Multiple Pages",
+                content: () => e('div', { className: "space-y-4 w-full" },
+                    e('p', { className: "text-gray-300 text-lg" }, "You can make a small multi-page site, but this is where things start to get close to actual web development. It is fine for a few pages, but it is not recommended once the site starts getting larger."),
+                    e(List, { items: [
+                        e('span', null, "Ask Gemini to create separate files such as ", e('code', { className: "bg-gray-800 px-1 rounded text-emerald-400" }, "index.html"), ", ", e('code', { className: "bg-gray-800 px-1 rounded text-emerald-400" }, "about.html"), ", and ", e('code', { className: "bg-gray-800 px-1 rounded text-emerald-400" }, "contact.html"), "."),
+                        e('span', null, "Save all of those files inside your ", e('code', { className: "bg-gray-800 px-1 rounded text-emerald-400" }, "site"), " folder."),
+                        "Ask Gemini to add normal links between the pages so they can navigate to each other.",
+                        "Upload the whole site folder to Cloudflare so all the pages are deployed together."
+                    ]}),
+                    e(InfoCard, { title: "Recommendation", type: "yellow" },
+                        "Use this for a small handful of linked pages. If you find yourself wanting many pages, shared layouts, or more complicated routing, you are moving beyond the simple offline approach this guide focuses on."
+                    )
+                )
+            },
+            {
+                title: "Projects This Approach Cannot Finish",
+                content: () => e('div', { className: "space-y-5 w-full" },
+                    e('p', { className: "text-gray-300 text-lg" }, "This approach is great for building polished frontends and interactive demos, but some kinds of projects need extra server-side systems behind the scenes."),
+                    e(List, { items: [
+                        "Anything that needs secret API keys or passwords that should not be exposed in the browser.",
+                        "Real login systems, private user accounts, or private data that needs to be protected.",
+                        "Web scraping tools or external data aggregation systems that constantly collect and combine data from other websites or services.",
+                        "Real-time multiplayer games, live collaboration systems, or background jobs that need to keep running after the page is closed.",
+                        "Payments, subscriptions, or other flows where a server has to securely confirm that something really happened."
+                    ]}),
+                    e(InfoCard, { title: "Important Note", type: "blue" },
+                        "Even when this approach cannot fully build the real product, it can still do a very good job of building a demo of how that product might look, feel, and theoretically work."
+                    ),
+                    e(InfoCard, { title: "Rule of Thumb", type: "red" },
+                        "If the project needs hidden credentials, secure server decisions, or something running in the background all the time, this approach by itself is not enough."
+                    )
+                )
+            },
+            {
+                title: "What We Covered Today",
+                content: () => e('div', { className: "space-y-6 w-full" },
+                    e(List, { items: [
+                        "Setting up the right prompts and Canvas environment.",
+                        "Using real data (LinkedIn) for practical website generation.",
+                        "Advanced prompting strategies & managing context limits.",
+                        "Deploying generated sites globally for free on Cloudflare.",
+                        "Building interactive games and advanced Meta-tools.",
+                        "Managing local assets and common AI layout issues."
+                    ]})
+                )
+            },
+            {
+                title: "Questions?",
+                content: () => e('div', { className: "text-center space-y-8 flex flex-col items-center justify-center h-full py-10" },
+                    e('i', { className: "fa-regular fa-circle-question text-6xl text-indigo-400 mb-2" }),
+                    e('p', { className: "text-2xl text-gray-200 font-light max-w-2xl" }, "Hope you've enjoyed it!"),
+                    e('p', { className: "text-gray-500" }, "Presentation by Will Marsman.")
+                )
+            }
+        ];
+
+        // --- Main Application Component ---
+        
+        const App = () => {
+            const initialSavedState = readSavedPresentationState();
+            const savedSlideIndex = Number.isInteger(initialSavedState.currentSlide) ? initialSavedState.currentSlide : 0;
+            const [currentSlide, setCurrentSlide] = useState(Math.max(0, Math.min(savedSlideIndex, slidesData.length - 1)));
+            const [touchStart, setTouchStart] = useState(null);
+            const [touchEnd, setTouchEnd] = useState(null);
+            const [isExampleOpen, setIsExampleOpen] = useState(Boolean(initialSavedState.selectedExampleTitle));
+            const [selectedExample, setSelectedExample] = useState(null);
+            const [selectedExampleTitle, setSelectedExampleTitle] = useState(initialSavedState.selectedExampleTitle || null);
+            const [galleryIndex, setGalleryIndex] = useState(0);
+            const [animKey, setAnimKey] = useState(0); // Used to trigger re-animation
+
+            const totalSlides = slidesData.length;
+
+            const nextSlide = useCallback(() => {
+                if (currentSlide < totalSlides - 1) {
+                    setIsExampleOpen(false);
+                    setSelectedExample(null);
+                    setSelectedExampleTitle(null);
+                    setGalleryIndex(0);
+                    setCurrentSlide(prev => prev + 1);
+                    setAnimKey(prev => prev + 1);
+                }
+            }, [currentSlide, totalSlides]);
+
+            const prevSlide = useCallback(() => {
+                if (currentSlide > 0) {
+                    setIsExampleOpen(false);
+                    setSelectedExample(null);
+                    setSelectedExampleTitle(null);
+                    setGalleryIndex(0);
+                    setCurrentSlide(prev => prev - 1);
+                    setAnimKey(prev => prev + 1);
+                }
+            }, [currentSlide]);
+
+            // Keyboard Navigation
+            useEffect(() => {
+                const handleKeyDown = (e) => {
+                    if (isExampleOpen && selectedExample && selectedExample.galleryImages && selectedExample.galleryImages.length) {
+                        if (e.key === 'ArrowRight') {
+                            e.preventDefault();
+                            setGalleryIndex(prev => (prev + 1) % selectedExample.galleryImages.length);
+                            return;
+                        }
+                        if (e.key === 'ArrowLeft') {
+                            e.preventDefault();
+                            setGalleryIndex(prev => (prev - 1 + selectedExample.galleryImages.length) % selectedExample.galleryImages.length);
+                            return;
+                        }
+                    }
+                    if (e.key === 'ArrowRight') nextSlide();
+                    if (e.key === 'ArrowLeft') prevSlide();
+                };
+                window.addEventListener('keydown', handleKeyDown);
+                return () => window.removeEventListener('keydown', handleKeyDown);
+            }, [isExampleOpen, nextSlide, prevSlide, selectedExample]);
+
+            // Touch Handlers for Swipe
+            const minSwipeDistance = 50;
+            const onTouchStartEvent = (e) => {
+                setTouchEnd(null);
+                setTouchStart(e.targetTouches[0].clientX);
+            };
+            const onTouchMoveEvent = (e) => setTouchEnd(e.targetTouches[0].clientX);
+            const onTouchEndEvent = () => {
+                if (!touchStart || !touchEnd) return;
+                const distance = touchStart - touchEnd;
+                if (distance > minSwipeDistance) nextSlide();
+                if (distance < -minSwipeDistance) prevSlide();
+            };
+
+            const progressPercentage = ((currentSlide + 1) / totalSlides) * 100;
+            const slide = slidesData[currentSlide];
+            const slideExamples = slide.examples || (slide.example ? [slide.example] : []);
+
+            useEffect(() => {
+                if (!selectedExampleTitle) {
+                    setSelectedExample(null);
+                    setIsExampleOpen(false);
+                    setGalleryIndex(0);
+                    return;
+                }
+
+                const savedExample = slideExamples.find((example) => example.title === selectedExampleTitle);
+                if (savedExample) {
+                    setSelectedExample(savedExample);
+                    setIsExampleOpen(true);
+                    setGalleryIndex(0);
+                } else {
+                    setSelectedExample(null);
+                    setSelectedExampleTitle(null);
+                    setIsExampleOpen(false);
+                    setGalleryIndex(0);
+                }
+            }, [selectedExampleTitle, slideExamples]);
+
+            useEffect(() => {
+                try {
+                    window.localStorage.setItem(PRESENTATION_STORAGE_KEY, JSON.stringify({
+                        currentSlide,
+                        selectedExampleTitle: isExampleOpen ? selectedExampleTitle : null
+                    }));
+                } catch (error) {
+                    // Ignore storage failures so the presentation still works.
+                }
+            }, [currentSlide, isExampleOpen, selectedExampleTitle]);
+
+            return e('div', { 
+                    className: "flex-1 flex flex-col items-center justify-center p-4 md:p-8 w-full max-w-5xl mx-auto h-full relative",
+                    onTouchStart: onTouchStartEvent,
+                    onTouchMove: onTouchMoveEvent,
+                    onTouchEnd: onTouchEndEvent
+                },
+                e(ExampleModal, {
+                    isOpen: isExampleOpen,
+                    onClose: () => {
+                        setIsExampleOpen(false);
+                        setSelectedExample(null);
+                        setSelectedExampleTitle(null);
+                        setGalleryIndex(0);
+                    },
+                    data: selectedExample,
+                    galleryIndex,
+                    onGalleryPrevious: () => setGalleryIndex((prev) => {
+                        const images = selectedExample && selectedExample.galleryImages ? selectedExample.galleryImages : [];
+                        return images.length ? (prev - 1 + images.length) % images.length : 0;
+                    }),
+                    onGalleryNext: () => setGalleryIndex((prev) => {
+                        const images = selectedExample && selectedExample.galleryImages ? selectedExample.galleryImages : [];
+                        return images.length ? (prev + 1) % images.length : 0;
+                    })
+                }),
+                
+                // Top Progress Bar
+                e('div', { className: "absolute top-0 left-0 w-full h-1.5 bg-gray-800" },
+                    e('div', { 
+                        className: "h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-300 ease-out",
+                        style: { width: `${progressPercentage}%` }
+                    })
+                ),
+
+                // Main Slide Card
+                e('div', { 
+                        key: animKey,
+                        className: "w-full max-h-[80vh] flex flex-col bg-gray-900/60 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl overflow-hidden slide-enter"
+                    },
+                    
+                    // Header
+                    e('div', { className: "px-6 py-5 md:px-10 md:py-8 border-b border-gray-800 flex items-center shrink-0" },
+                        e('h2', { className: "text-2xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 to-purple-400" }, 
+                            slide.title
+                        )
+                    ),
+                    
+                    // Content Area (Scrollable if needed)
+                    e('div', { className: "p-6 md:p-10 overflow-y-auto flex-1 custom-scrollbar flex flex-col justify-center" },
+                        slide.content(),
+                        slideExamples.length ? e('div', { className: "mt-8 flex flex-wrap gap-3" },
+                            slideExamples.map((example, idx) =>
+                                e('button', {
+                                    key: idx,
+                                    onClick: () => {
+                                        setSelectedExample(example);
+                                        setSelectedExampleTitle(example.title);
+                                        setGalleryIndex(0);
+                                        setIsExampleOpen(true);
+                                    },
+                                    className: "inline-flex items-center gap-3 rounded-xl border border-indigo-400/30 bg-indigo-500/10 px-4 py-3 text-sm font-semibold text-indigo-200 transition hover:bg-indigo-500/20 hover:text-white"
+                                },
+                                    e('i', { className: "fa-solid fa-up-right-from-square" }),
+                                    example.buttonLabel || (slideExamples.length > 1 ? `View Demo ${idx + 1}` : "View Demo Example")
+                                )
+                            )
+                        ) : null
+                    )
+                ),
+
+                // Bottom Navigation
+                e('div', { className: "w-full mt-6 flex items-center justify-between no-select" },
+                    
+                    // Prev Button
+                    e('button', {
+                        onClick: prevSlide,
+                        disabled: currentSlide === 0,
+                        className: `flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+                            currentSlide === 0 
+                                ? 'text-gray-600 cursor-not-allowed opacity-50' 
+                                : 'text-gray-300 hover:text-white hover:bg-gray-800 active:scale-95'
+                        }`
+                    }, 
+                        e('i', { className: "fa-solid fa-arrow-left" }),
+                        e('span', { className: "hidden sm:inline" }, "Previous")
+                    ),
+
+                    // Page Indicator
+                    e('div', { className: "flex space-x-1.5" },
+                        slidesData.map((_, idx) => 
+                            e('div', {
+                                key: idx,
+                                className: `h-1.5 rounded-full transition-all duration-300 ${
+                                    idx === currentSlide ? 'w-6 bg-indigo-500' : 'w-1.5 bg-gray-700'
+                                }`
+                            })
+                        )
+                    ),
+
+                    // Next Button
+                    e('button', {
+                        onClick: nextSlide,
+                        disabled: currentSlide === totalSlides - 1,
+                        className: `flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+                            currentSlide === totalSlides - 1 
+                                ? 'text-gray-600 cursor-not-allowed opacity-50' 
+                                : 'text-indigo-400 hover:text-indigo-300 hover:bg-indigo-900/30 active:scale-95'
+                        }`
+                    }, 
+                        e('span', { className: "hidden sm:inline" }, "Next"),
+                        e('i', { className: "fa-solid fa-arrow-right" })
+                    )
+                )
+            );
+        };
+
+        // Render the App using ReactDOM
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(e(App));
+    </script>
+</body>
+</html>
