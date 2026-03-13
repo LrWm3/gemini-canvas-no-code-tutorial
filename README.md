@@ -66,3 +66,4 @@ site/
 ## Deployment
 
 This repository is suitable for any static hosting provider. To deploy, publish the contents of `site/` as the site root.
+# gemini-canvas-no-code-tutorial
