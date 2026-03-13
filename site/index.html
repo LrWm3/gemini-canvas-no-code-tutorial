@@ -311,7 +311,7 @@
                         e('div', { className: "bg-indigo-600 text-white rounded-full w-8 h-8 flex items-center justify-center shrink-0 font-bold" }, "2"),
                         e('div', { className: "w-full" },
                             e('p', { className: "text-gray-300 text-lg pt-1 mb-2" }, "Upload it and use this prompt:"),
-                            e(CodeBlock, null, "In html + css + js + tailwind + inline html react (cdn import [NO JSX]), convert this Linkedin export into a website")
+                            e(CodeBlock, null, "In html + css + js + tailwind + inline html react (cdn import [NO JSX]), make me a personal blog based on this PDF.")
                         )
                     ),
                     e('div', { className: "flex items-start gap-4" },
@@ -560,6 +560,21 @@
                             "meta/lesson-plan/4.png",
                             "meta/lesson-plan/5.png"
                         ]
+                    },
+                    {
+                        title: "Story Generator Demo",
+                        buttonLabel: "View Story Generator Demo",
+                        chat: [
+                            { role: 'user', text: "In html + css + js + tailwind + inline html react (cdn import [NO JSX]), that helps me make a simple CYOA, where I prompt to decide what happens next. each time I prompt it generates what happens next with text + an image showing what happened. have a few example starting prompts, and include a prompt box to generate them. for generated items, keep them in a list, we can click on to see the details in the main viewing area. queue requests so we can send multiple at once and show time we have been waiting for a request to resolve, and have robust error handling so a failing request doesn't break the site. Add an 'export as json' and 'import from clipboard' feature to allow saving and loading progress." },
+                            { role: 'assistant', text: "I will build a single-file React application using the CDN-based \"no JSX\" approach. This app will function as an AI-powered Choose Your Own Adventure (CYOA) engine, allowing you to generate text and images for your story." }
+                        ],
+                        galleryTitle: "story generator",
+                        galleryImages: [
+                            "meta/cyoa/1.png",
+                            "meta/cyoa/2.png",
+                            "meta/cyoa/3.png",
+                            "meta/cyoa/4.png"
+                        ]
                     }
                 ],
                 content: () => e('div', { className: "space-y-4 w-full" },
@@ -568,7 +583,8 @@
                     e(List, { items: [
                         "A persona & business idea generator. Select multiple to merge and generate a combined concept.",
                         "A Storybook-style component library (Ensure you tell it to reject JSX and only create functional inline components).",
-                        "A lesson-plan builder that generates modules, quizzes, and a teacher dashboard for reviewing outputs."
+                        "A lesson-plan builder that generates modules, quizzes, and a teacher dashboard for reviewing outputs.",
+                        "A story generator that branches scene-by-scene, keeps a prompt queue, and exports progress as JSON."
                     ]}),
                     e('details', { className: "bg-gray-950 border border-gray-800 rounded-xl overflow-hidden" },
                         e('summary', { className: "cursor-pointer list-none no-select px-4 py-3 text-white font-semibold bg-gray-900/80 border-b border-gray-800" }, "Show reusable meta-tool prompt"),
