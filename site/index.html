@@ -63,9 +63,40 @@
         
         const Highlight = ({ children }) => e('span', { className: "text-indigo-400 font-semibold" }, children);
         
-        const CodeBlock = ({ children }) => e('div', { 
-            className: "bg-gray-950 border border-gray-800 p-4 rounded-xl text-emerald-400 font-mono text-sm md:text-base my-3 overflow-x-auto shadow-inner w-full custom-scrollbar" 
+        const CodeBlock = ({ children }) => e('div', {
+            className: "bg-gray-950 border border-gray-800 p-4 rounded-xl text-emerald-400 font-mono text-sm md:text-base my-3 overflow-x-auto shadow-inner w-full custom-scrollbar"
         }, e('code', { className: "whitespace-pre-wrap break-words" }, children));
+
+        const CopyableCodeBlock = ({ children, copyText }) => {
+            const [copied, setCopied] = useState(false);
+
+            const handleCopy = async () => {
+                try {
+                    await navigator.clipboard.writeText(copyText || children);
+                    setCopied(true);
+                    window.setTimeout(() => setCopied(false), 1600);
+                } catch (error) {
+                    console.error('Failed to copy prompt:', error);
+                }
+            };
+
+            return e('div', { className: "w-full" },
+                e('div', { className: "flex justify-end mb-2" },
+                    e('button', {
+                        onClick: handleCopy,
+                        className: `inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-semibold transition ${
+                            copied
+                                ? 'border-emerald-400/40 bg-emerald-500/15 text-emerald-200'
+                                : 'border-white/10 bg-white/5 text-slate-200 hover:bg-white/10'
+                        }`
+                    },
+                        e('i', { className: copied ? "fa-solid fa-check" : "fa-regular fa-copy" }),
+                        copied ? "Copied" : "Copy to clipboard"
+                    )
+                ),
+                e(CodeBlock, null, children)
+            );
+        };
         
         const List = ({ items }) => e('ul', { className: "list-none space-y-3 text-gray-300 w-full" },
             items.map((item, i) => e('li', { key: i, className: "flex items-start" },
@@ -262,7 +293,7 @@
                     "Having Fun with Stylized Prompts",
                     "Preparing and Hosting on Cloudflare",
                     "Game Creation workflows (2D & 3D)",
-                    "Generating Meta Tools & Apps",
+                    "Generating Gemini AI Apps",
                     "Solving Frequent AI Issues",
                     "Adding Images correctly"
                 ]})
@@ -276,11 +307,11 @@
                     e('h3', { className: "text-lg text-white font-semibold flex items-center gap-2" }, 
                         e('i', { className: "fa-solid fa-key text-indigo-400" }), "Primary Key Prompt:"
                     ),
-                    e(CodeBlock, null, "In html + css + js + tailwind + fontawesome, and NO JSX, create me a mobile and desktop friendly website"),
+                    e(CopyableCodeBlock, null, "In html + css + js + tailwind + fontawesome, and NO JSX, create me a mobile and desktop friendly website"),
                     e('h3', { className: "text-lg text-white font-semibold mt-6 flex items-center gap-2" }, 
                         e('i', { className: "fa-brands fa-react text-blue-400" }), "Secondary Key Prompt (React):"
                     ),
-                    e(CodeBlock, null, "In html + css + js + tailwind + fontawesome + inline html react (cdn import [NO JSX]), create me a mobile and desktop friendly website")
+                    e(CopyableCodeBlock, null, "In html + css + js + tailwind + fontawesome + inline html react (cdn import [NO JSX]), create me a mobile and desktop friendly website")
                 )
             },
             {
@@ -311,7 +342,7 @@
                         e('div', { className: "bg-indigo-600 text-white rounded-full w-8 h-8 flex items-center justify-center shrink-0 font-bold" }, "2"),
                         e('div', { className: "w-full" },
                             e('p', { className: "text-gray-300 text-lg pt-1 mb-2" }, "Upload it and use this prompt:"),
-                            e(CodeBlock, null, "In html + css + js + tailwind + inline html react (cdn import [NO JSX]), make me a personal blog based on this PDF.")
+                            e(CopyableCodeBlock, null, "In html + css + js + tailwind + inline html react (cdn import [NO JSX]), make me a personal blog based on this PDF.")
                         )
                     ),
                     e('div', { className: "flex items-start gap-4" },
@@ -418,7 +449,7 @@
                 },
                 content: () => e('div', { className: "space-y-6 w-full" },
                     e('p', { className: "text-lg text-gray-300" }, "You can prompt for wild, creative interactions directly in the same page. Try adding this to your base prompt:"),
-                    e(CodeBlock, null, "put a toggle button called 'classic mode' that themes everything like windows 95")
+                    e(CopyableCodeBlock, null, "put a toggle button called 'classic mode' that themes everything like windows 95")
                 )
             },
             {
@@ -432,6 +463,27 @@
                         e('span', null, "Drag and drop your updated ", e('code', { className: "bg-gray-800 px-2 py-1 rounded text-emerald-400 font-mono" }, "site"), " folder."),
                         e('span', null, "Click ", e('strong', { className: "text-white" }, "Deploy"), " to replace the live version with the new one.")
                     ]})
+                )
+            },
+            {
+                title: "The Asset Trick",
+                content: () => e('div', { className: "space-y-6 w-full" },
+                    e('p', { className: "text-lg text-gray-300 border-b border-gray-700 pb-4" }, "The asset trick adds a lightweight upload-and-export flow to an existing site so missing image, video, and other media paths can be staged first, then bundled into a deployable site package later."),
+                    e(List, { items: [
+                        "Its purpose is to reduce guesswork when adding assets by showing the expected file paths and letting beginners upload a folder that maps onto those paths.",
+                        "When it works, it can guide users toward a clean `site/index.html` plus asset-folder structure without manually wiring every file by hand.",
+                        "It is still experimental and somewhat flaky, so use at least Gemini `Thinking`, and preferably `Pro`, when asking it to retrofit the feature into an existing site."
+                    ]}),
+                    e(InfoCard, { title: "Use A Reactless Prompt", type: "yellow" },
+                        e(CopyableCodeBlock, null, "In html + css + js + tailwind + three.js (no JSX), <prompt to create website>. Where media content is required (img / video / etc), simply set up the file paths for now, even though they will be missing")
+                    ),
+                    e(InfoCard, { title: "Warning", type: "red" }, "Editing the content of the site directly and organizing files manually may be easier. The asset trick is included anyway because, when it works, it naturally guides beginners on how to add assets with less guess work on their end."),
+                    e('details', { className: "bg-gray-950 border border-gray-800 rounded-xl overflow-hidden" },
+                        e('summary', { className: "cursor-pointer list-none no-select px-4 py-3 text-white font-semibold bg-gray-900/80 border-b border-gray-800" }, "Show asset trick prompt"),
+                        e('div', { className: "p-4" },
+                            e(CopyableCodeBlock, null, "implement the Asset trick and editor asset trick for this Gemini Canvas Site\n\n# Asset trick implementation guide\n\n- if __app_id is present, the upload assets button is present, otherwise, 'display: none' for all asset trick elements\n- it opens a modal we can drop a folder into to upload assets\n- modal contains a manifest of expected files with rel-paths before we upload, if any, and post upload, if they were found in the uploaded folder or not. this appears even if the manifest would be empty. this appears even before the asset folder is uploaded, so we can see what assets we are missing and need to add to the folder before uploading\n- reuploading clears the existing assets, we need to upload a folder with all assets at once\n- once uploaded, the rel urls of the site will direct to the uploaded assets instead according to their name and path\n- once it all looks good, we can download a zip of the website source + the assets uploaded called \"site.zip\", in a bundle that would still work if we were to open it as a local file; this allows for cleanly putting the site onto cloudflare pages. the page itself is saved in the zip as index.html\n- during export of 'index.html', all script blocks before '<title>' blocks in <head> must be stripped, as they contain gemini app specific injected code. add an id to <head> to make it easy to get a reference to even when disabled or injected in an iframe-like context\n- do not strip dev panel HTML or scripts during export\n- when uploaded files are not found in the site, list them in the asset manifest as 'unused' to help users understand exactly what folder they should upload\n- compute required assets once and cache, as post upload the asset manifest will change to point to the uploaded files\n\n## Editor asset trick extension implementation guide\n\n- additionally there is a toggle edit button, only present when upload trick is on. while toggled, any of the copy text can be edited. when exporting, the updated site copy is downloaded as the edited text when downloading the zip in index.html\n- finally, there is a quick 'copy site' button which copies what would be the contents of 'index.html' to clipboard.")
+                        )
+                    )
                 )
             },
             {
@@ -454,7 +506,7 @@
                 content: () => e('div', { className: "space-y-6 w-full" },
                     e('p', { className: "text-gray-300 text-lg" }, "First, decide if your game is 2D or 3D. For 2D games, rely on standard HTML canvas or DOM elements."),
                     e('h3', { className: "text-lg text-white font-semibold" }, "2D Game Prompt structure:"),
-                    e(CodeBlock, null, "In html + css + js + tailwind + fontawesome + inline html react (cdn import [NO JSX]), <prompt>, use emojis or font awesome as needed for the art, and use localstorage to save and load data between page refreshes")
+                    e(CopyableCodeBlock, null, "In html + css + js + tailwind + fontawesome + inline html react (cdn import [NO JSX]), <prompt>, use emojis or font awesome as needed for the art, and use localstorage to save and load data between page refreshes")
                 )
             },
             {
@@ -496,12 +548,12 @@
                 content: () => e('div', { className: "space-y-6 w-full" },
                     e('p', { className: "text-gray-300 text-lg" }, "Gemini is highly capable of leveraging libraries like Three.js for 3D interactions."),
                     e('h3', { className: "text-lg text-white font-semibold" }, "3D Prompt structure:"),
-                    e(CodeBlock, null, "In html + css + js + tailwind + Three.js, <prompt>"),
+                    e(CopyableCodeBlock, null, "In html + css + js + tailwind + Three.js, <prompt>"),
                     e(InfoCard, { title: "Creative Example", type: "purple" }, "Try regenerating your LinkedIn resume using this prompt to create a stunning, interactive 3D portfolio.")
                 )
             },
             {
-                title: "Meta Tool Generation",
+                title: "Gemini AI App Generation",
                 examples: [
                     {
                         title: "Reddit Thread Simulator Demo",
@@ -587,9 +639,9 @@
                         "A story generator that branches scene-by-scene, keeps a prompt queue, and exports progress as JSON."
                     ]}),
                     e('details', { className: "bg-gray-950 border border-gray-800 rounded-xl overflow-hidden" },
-                        e('summary', { className: "cursor-pointer list-none no-select px-4 py-3 text-white font-semibold bg-gray-900/80 border-b border-gray-800" }, "Show reusable meta-tool prompt"),
+                        e('summary', { className: "cursor-pointer list-none no-select px-4 py-3 text-white font-semibold bg-gray-900/80 border-b border-gray-800" }, "Show reusable Gemini AI app prompt"),
                         e('div', { className: "p-4" },
-                            e(CodeBlock, null, "In html + css + js + tailwind + inline html react (cdn import [NO JSX]), <prompt>, and include a prompt box to generate them. for generated items, keep them in a list, we can click on to see the details in the main viewing area. queue requests so we can send multiple at once and show time we have been waiting for a request to resolve, and have robust error handling so a failing request doesn't break the site. Add a 'Save to file' and 'import from file' feature to allow saving and loading progress.")
+                            e(CopyableCodeBlock, null, "In html + css + js + tailwind + inline html react (cdn import [NO JSX]), <prompt>, and include a prompt box to generate them. for generated items, keep them in a list, we can click on to see the details in the main viewing area. queue requests so we can send multiple at once and show time we have been waiting for a request to resolve, and have robust error handling so a failing request doesn't break the site. Add a 'Save to file' and 'import from file' feature to allow saving and loading progress.")
                         )
                     )
                 )
@@ -668,7 +720,7 @@
                         "When you upload the full site folder to Cloudflare, the favicon file will go with it."
                     ]}),
                     e(InfoCard, { title: "Simple Prompt Add-On", type: "green" },
-                        e(CodeBlock, null, "Also add a favicon using favicon.png from the same site folder.")
+                        e(CopyableCodeBlock, null, "Also add a favicon using favicon.png from the same site folder.")
                     )
                 )
             },
