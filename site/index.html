@@ -219,6 +219,15 @@
                     e('div', { className: "flex flex-col md:flex-row max-h-[calc(88vh-88px)]" },
                         e('div', { className: "md:w-[42%] border-b md:border-b-0 md:border-r border-white/10 bg-slate-950/70 p-4 md:p-6 overflow-y-auto custom-scrollbar" },
                             e('div', { className: "text-xs uppercase tracking-[0.25em] text-slate-500 mb-4" }, "Prompt Flow"),
+                            data.demoLink ? e('div', { className: "mb-4 rounded-2xl border border-emerald-400/20 bg-emerald-500/10 p-4" },
+                                e('div', { className: "text-[11px] uppercase tracking-[0.25em] text-emerald-300 mb-2" }, "Live Demo"),
+                                e('a', {
+                                    href: data.demoLink,
+                                    target: "_blank",
+                                    rel: "noreferrer",
+                                    className: "break-all text-sm font-semibold text-emerald-200 underline decoration-emerald-300/50 underline-offset-4 hover:text-white"
+                                }, data.demoLink)
+                            ) : null,
                             e('div', { className: "space-y-3" },
                                 data.chat.map((message, idx) =>
                                     e('div', {
@@ -294,7 +303,7 @@
                     "Having Fun with Stylized Prompts",
                     "Preparing and Hosting on Cloudflare",
                     "Game Creation workflows (2D & 3D)",
-                    "Generating Gemini AI Apps",
+                    "Creating Gemini Canvas Apps",
                     "Solving Frequent AI Issues",
                     "Adding Images correctly"
                 ]})
@@ -533,11 +542,12 @@
                 )
             },
             {
-                title: "Gemini AI App Generation",
+                title: "Creating Gemini Canvas Apps",
                 examples: [
                     {
                         title: "Reddit Thread Simulator Demo",
                         buttonLabel: "View Reddit Demo",
+                        demoLink: "https://gemini.google.com/share/8c25457acb22",
                         chat: [
                             { role: 'user', text: "In html + css + js + tailwind + Three.js + fontawesome, and NO JSX, create me a mobile and desktop friendly website called reddit thread simulator. when it first loads it loads to /r/all, which uses gemini AI to populate. we can create a new topic or click an existing one. if we click an existing topic it ai generates user account names and reddit replies. if we create a new one we specify the subreddit and the title and the content and it generates the replies. we can also comment from inside a thread and it will generate a replies to our reply.\n\nstyle the entire thing like old.reddit.com and have robust error handling and cache thread contents so we dont need to regenerate it if we revisit the same thread" },
                             { role: 'assistant', text: "I will build a complete, single-file web application that simulates the classic old.reddit.com experience using HTML, CSS (Tailwind), JavaScript, Three.js (for a 3D animated upvote arrow logo), and FontAwesome. (.. continued ..)" },
@@ -766,6 +776,36 @@
                     ),
                     e(InfoCard, { title: "Rule of Thumb", type: "red" },
                         "If the project needs hidden credentials, secure server decisions, or something running in the background all the time, this approach by itself is not enough."
+                    )
+                )
+            },
+            {
+                title: "Gemini AI Studio Apps",
+                content: () => e('div', { className: "space-y-5 w-full" },
+                    e('p', { className: "text-gray-300 text-lg leading-relaxed" },
+                        "Gemini AI Studio Apps launched on March 20th and help address the limits of Gemini Canvas. With Gemini AI Studio Apps, you can build multi-user apps and games with AI, accounts, databases, real-time collaboration, and image and video generation, all from a single prompt. Hosting them does not follow the simple Cloudflare workflow we demonstrated earlier."
+                    ),
+                    e('p', { className: "text-gray-300 text-lg leading-relaxed" },
+                        "Gemini AI Studio Apps can be shared within the Google ecosystem, but hosting them does not follow the simple Cloudflare workflow we demonstrated earlier."
+                    ),
+                    e('p', { className: "text-gray-300 text-lg leading-relaxed" },
+                        "In general, creating a Gemini AI Studio App takes four to fifteen times as long as creating basic standalone websites in Gemini Canvas, but it allows for more control and much more complex and powerful applications. If you are interested in building apps with Gemini AI Studio, I recommend starting with the documentation and tutorials Google has provided."
+                    ),
+                    e(InfoCard, { title: "Build Here", type: "green" },
+                        e('a', {
+                            href: "https://aistudio.google.com/apps",
+                            target: "_blank",
+                            rel: "noreferrer",
+                            className: "font-semibold text-green-200 underline decoration-green-300/50 underline-offset-4 hover:text-white"
+                        }, "https://aistudio.google.com/apps")
+                    ),
+                    e(InfoCard, { title: "More Information", type: "blue" },
+                        e('a', {
+                            href: "https://ai.google.dev/gemini-api/docs/aistudio-build-mode",
+                            target: "_blank",
+                            rel: "noreferrer",
+                            className: "font-semibold text-blue-200 underline decoration-blue-300/50 underline-offset-4 hover:text-white"
+                        }, "https://ai.google.dev/gemini-api/docs/aistudio-build-mode")
                     )
                 )
             },
