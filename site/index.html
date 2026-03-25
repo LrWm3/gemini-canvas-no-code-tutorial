@@ -80,19 +80,20 @@
                 }
             };
 
-            return e('div', { className: "w-full" },
-                e('div', { className: "flex justify-end mb-2" },
-                    e('button', {
-                        onClick: handleCopy,
-                        className: `inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-semibold transition ${
+            return e('button', {
+                    type: "button",
+                    onClick: handleCopy,
+                    className: "group relative w-full text-left"
+                },
+                e('div', {
+                        className: `absolute right-3 top-3 z-10 inline-flex items-center gap-2 rounded-full border px-2.5 py-1 text-[11px] font-semibold transition ${
                             copied
-                                ? 'border-emerald-400/40 bg-emerald-500/15 text-emerald-200'
-                                : 'border-white/10 bg-white/5 text-slate-200 hover:bg-white/10'
+                                ? 'border-emerald-400/40 bg-emerald-500/20 text-emerald-200'
+                                : 'border-white/10 bg-slate-950/70 text-slate-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100'
                         }`
                     },
-                        e('i', { className: copied ? "fa-solid fa-check" : "fa-regular fa-copy" }),
-                        copied ? "Copied" : "Copy to clipboard"
-                    )
+                    e('i', { className: copied ? "fa-solid fa-check" : "fa-regular fa-copy" }),
+                    copied ? "Copied" : "Click to copy"
                 ),
                 e(CodeBlock, null, children)
             );
@@ -463,27 +464,6 @@
                         e('span', null, "Drag and drop your updated ", e('code', { className: "bg-gray-800 px-2 py-1 rounded text-emerald-400 font-mono" }, "site"), " folder."),
                         e('span', null, "Click ", e('strong', { className: "text-white" }, "Deploy"), " to replace the live version with the new one.")
                     ]})
-                )
-            },
-            {
-                title: "The Asset Trick",
-                content: () => e('div', { className: "space-y-6 w-full" },
-                    e('p', { className: "text-lg text-gray-300 border-b border-gray-700 pb-4" }, "The asset trick adds a lightweight upload-and-export flow to an existing site so missing image, video, and other media paths can be staged first, then bundled into a deployable site package later."),
-                    e(List, { items: [
-                        "Its purpose is to reduce guesswork when adding assets by showing the expected file paths and letting beginners upload a folder that maps onto those paths.",
-                        "When it works, it can guide users toward a clean `site/index.html` plus asset-folder structure without manually wiring every file by hand.",
-                        "It is still experimental and somewhat flaky, so use at least Gemini `Thinking`, and preferably `Pro`, when asking it to retrofit the feature into an existing site."
-                    ]}),
-                    e(InfoCard, { title: "Use A Reactless Prompt", type: "yellow" },
-                        e(CopyableCodeBlock, null, "In html + css + js + tailwind + three.js (no JSX), <prompt to create website>. Where media content is required (img / video / etc), simply set up the file paths for now, even though they will be missing")
-                    ),
-                    e(InfoCard, { title: "Warning", type: "red" }, "Editing the content of the site directly and organizing files manually may be easier. The asset trick is included anyway because, when it works, it naturally guides beginners on how to add assets with less guess work on their end."),
-                    e('details', { className: "bg-gray-950 border border-gray-800 rounded-xl overflow-hidden" },
-                        e('summary', { className: "cursor-pointer list-none no-select px-4 py-3 text-white font-semibold bg-gray-900/80 border-b border-gray-800" }, "Show asset trick prompt"),
-                        e('div', { className: "p-4" },
-                            e(CopyableCodeBlock, null, "implement the Asset trick and editor asset trick for this Gemini Canvas Site\n\n# Asset trick implementation guide\n\n- if __app_id is present, the upload assets button is present, otherwise, 'display: none' for all asset trick elements\n- it opens a modal we can drop a folder into to upload assets\n- modal contains a manifest of expected files with rel-paths before we upload, if any, and post upload, if they were found in the uploaded folder or not. this appears even if the manifest would be empty. this appears even before the asset folder is uploaded, so we can see what assets we are missing and need to add to the folder before uploading\n- reuploading clears the existing assets, we need to upload a folder with all assets at once\n- once uploaded, the rel urls of the site will direct to the uploaded assets instead according to their name and path\n- once it all looks good, we can download a zip of the website source + the assets uploaded called \"site.zip\", in a bundle that would still work if we were to open it as a local file; this allows for cleanly putting the site onto cloudflare pages. the page itself is saved in the zip as index.html\n- during export of 'index.html', all script blocks before '<title>' blocks in <head> must be stripped, as they contain gemini app specific injected code. add an id to <head> to make it easy to get a reference to even when disabled or injected in an iframe-like context\n- do not strip dev panel HTML or scripts during export\n- when uploaded files are not found in the site, list them in the asset manifest as 'unused' to help users understand exactly what folder they should upload\n- compute required assets once and cache, as post upload the asset manifest will change to point to the uploaded files\n\n## Editor asset trick extension implementation guide\n\n- additionally there is a toggle edit button, only present when upload trick is on. while toggled, any of the copy text can be edited. when exporting, the updated site copy is downloaded as the edited text when downloading the zip in index.html\n- finally, there is a quick 'copy site' button which copies what would be the contents of 'index.html' to clipboard.")
-                        )
-                    )
                 )
             },
             {
